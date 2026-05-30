@@ -1,0 +1,184 @@
+import { create } from 'zustand';
+import { Artwork, FilterOptions } from '../types';
+import { artworkApi, adminApi } from '../utils/api';
+import { User } from '../types';
+
+interface ArtworkState {
+  artworks: Artwork[];
+  myWorks: Artwork[];
+  isLoading: boolean;
+
+  // 初始化加载
+  initialize: () => void;
+
+  // 获取我的作品
+  fetchMyWorks: () => Promise<void>;
+
+  // 提交作品
+  submitArtwork: (
+    user: User,
+    title: string,
+    description: string,
+    type: 'image' | 'video' | 'html',
+    file: File
+  ) => Promise<{ success: boolean; error?: string }>;
+
+  // 删除作品
+  deleteArtwork: (id: string) => Promise<{ success: boolean; error?: string }>;
+
+  // 获取所有作品（老师端）
+  fetchAllArtworks: (options?: FilterOptions) => Promise<void>;
+
+  // 批量下载
+  batchDownload: (artworkIds: string[]) => Promise<{ success: boolean; error?: string }>;
+
+  // 获取统计数据
+  fetchStats: () => Promise<{
+    totalWorks: number;
+    totalStudents: number;
+    typeStats: { image: number; video: number; html: number };
+  }>;
+}
+
+export const useArtworkStore = create<ArtworkState>((set, get) => ({
+  artworks: [],
+  myWorks: [],
+  isLoading: false,
+
+  initialize: () => {
+    set({ isLoading: true });
+    // 初始化时可以预加载数据
+    set({ isLoading: false });
+  },
+
+  fetchMyWorks: async () => {
+    try {
+      const result = await artworkApi.getMyWorks();
+      
+      if (result.success && result.data) {
+        const artworks = result.data.artworks.map((a: any) => ({
+          id: a.id,
+          studentId: a.studentId,
+          studentName: a.studentName,
+          title: a.title,
+          description: a.description,
+          type: a.type,
+          fileName: a.fileName,
+          fileData: artworkApi.getFileUrl(a.fileName),
+          fileSize: a.fileSize,
+          mimeType: a.mimeType,
+          createdAt: new Date(a.createdAt).getTime()
+        }));
+        
+        set({ myWorks: artworks });
+      }
+    } catch (error) {
+      console.error('获取作品列表失败:', error);
+    }
+  },
+
+  submitArtwork: async (user, title, description, type, file) => {
+    try {
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('description', description);
+      formData.append('type', type);
+      formData.append('file', file);
+
+      const result = await artworkApi.submit(formData);
+      
+      if (result.success) {
+        // 重新获取作品列表
+        await get().fetchMyWorks();
+        return { success: true };
+      } else {
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      return { success: false, error: '提交失败，请重试' };
+    }
+  },
+
+  deleteArtwork: async (id) => {
+    try {
+      const result = await artworkApi.deleteWork(id);
+      
+      if (result.success) {
+        // 从列表中移除
+        set(state => ({
+          myWorks: state.myWorks.filter(w => w.id !== id)
+        }));
+        return { success: true };
+      } else {
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      return { success: false, error: '删除失败，请重试' };
+    }
+  },
+
+  fetchAllArtworks: async (options) => {
+    try {
+      const result = await adminApi.getAllArtworks({
+        type: options?.type,
+        search: options?.search
+      });
+      
+      if (result.success && result.data) {
+        const artworks = result.data.artworks.map((a: any) => ({
+          id: a.id,
+          studentId: a.studentId,
+          studentName: a.studentName,
+          title: a.title,
+          description: a.description,
+          type: a.type,
+          fileName: a.fileName,
+          fileData: artworkApi.getFileUrl(a.fileName),
+          fileSize: a.fileSize,
+          mimeType: a.mimeType,
+          createdAt: new Date(a.createdAt).getTime()
+        }));
+        
+        set({ artworks });
+      }
+    } catch (error) {
+      console.error('获取作品列表失败:', error);
+    }
+  },
+
+  batchDownload: async (artworkIds) => {
+    try {
+      const result = await adminApi.batchDownload(artworkIds);
+      return result;
+    } catch (error) {
+      return { success: false, error: '下载失败，请重试' };
+    }
+  },
+
+  fetchStats: async () => {
+    try {
+      const result = await adminApi.getStats();
+      
+      if (result.success && result.data) {
+        return {
+          totalWorks: result.data.totalWorks,
+          totalStudents: result.data.totalStudents,
+          typeStats: result.data.typeStats
+        };
+      }
+      
+      return {
+        totalWorks: 0,
+        totalStudents: 0,
+        typeStats: { image: 0, video: 0, html: 0 }
+      };
+    } catch (error) {
+      console.error('获取统计数据失败:', error);
+      return {
+        totalWorks: 0,
+        totalStudents: 0,
+        typeStats: { image: 0, video: 0, html: 0 }
+      };
+    }
+  }
+}));
