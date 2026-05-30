@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -13,12 +13,16 @@ import { Artwork, FilterOptions } from '../types';
 
 export const WorksOverview: React.FC = () => {
   const navigate = useNavigate();
-  const { filterArtworks } = useArtworkStore();
+  const { filterArtworks, fetchAllArtworks } = useArtworkStore();
   
   const [filters, setFilters] = useState<FilterOptions>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedWorks, setSelectedWorks] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  useEffect(() => {
+    fetchAllArtworks();
+  }, [fetchAllArtworks]);
 
   const artworks = filterArtworks({ ...filters, search: searchTerm });
 

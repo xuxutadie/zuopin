@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -10,7 +10,11 @@ import { FolderOpen, Users, FileImage, FileVideo, FileCode, Download } from 'luc
 
 export const TeacherDashboard: React.FC = () => {
   const { currentUser } = useAuthStore();
-  const { artworks } = useArtworkStore();
+  const { artworks, fetchAllArtworks } = useArtworkStore();
+
+  useEffect(() => {
+    fetchAllArtworks();
+  }, [fetchAllArtworks]);
   
   const stats = {
     totalStudents: new Set(artworks.map(a => a.studentId)).size,
