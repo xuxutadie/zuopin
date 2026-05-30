@@ -13,6 +13,8 @@ interface ArtworkState {
 
   // 获取我的作品
   fetchMyWorks: () => Promise<void>;
+  getStudentWorks: (studentId: string) => Artwork[];
+  filterArtworks: (options?: FilterOptions) => Artwork[];
 
   // 提交作品
   submitArtwork: (
@@ -75,6 +77,34 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
     } catch (error) {
       console.error('获取作品列表失败:', error);
     }
+  },
+
+  getStudentWorks: (studentId) => {
+    return get().myWorks.filter(artwork => artwork.studentId === studentId);
+  },
+
+  filterArtworks: (options) => {
+    const search = options?.search?.trim().toLowerCase();
+
+    return get().artworks.filter(artwork => {
+      if (options?.type && artwork.type !== options.type) {
+        return false;
+      }
+
+      if (options?.studentName && artwork.studentName !== options.studentName) {
+        return false;
+      }
+
+      if (!search) {
+        return true;
+      }
+
+      return (
+        artwork.title.toLowerCase().includes(search) ||
+        artwork.studentName.toLowerCase().includes(search) ||
+        artwork.description.toLowerCase().includes(search)
+      );
+    });
   },
 
   submitArtwork: async (user, title, description, type, file) => {

@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import pool from '../config/database';
 import { generateToken } from '../middleware/auth';
 
-const router = Router();
+const router: Router = Router();
 
 // 用户注册
 router.post('/register', async (req: Request, res: Response) => {

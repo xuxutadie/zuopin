@@ -10,7 +10,7 @@ import {
   getFileExtension
 } from '../utils/fileHelper';
 
-const router = Router();
+const router: Router = Router();
 
 // 配置文件上传
 const storage = multer.diskStorage({

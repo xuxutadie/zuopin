@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import path from 'path';
 
-const router = Router();
+const router: Router = Router();
 
 // 提供文件访问（用于前端预览）
 router.get('/:filename', (req: Request, res: Response) => {

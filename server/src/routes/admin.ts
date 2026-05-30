@@ -4,7 +4,7 @@ import archiver from 'archiver';
 import pool from '../config/database';
 import { authenticateToken, requireTeacher } from '../middleware/auth';
 
-const router = Router();
+const router: Router = Router();
 
 // 获取所有作品列表
 router.get(
