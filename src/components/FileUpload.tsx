@@ -74,8 +74,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             'border-2 border-dashed rounded-xl p-8 text-center',
             'transition-all duration-200 cursor-pointer',
             isDragging 
-              ? 'border-blue-500 bg-blue-50' 
-              : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50',
+              ? 'border-blue-500 bg-blue-500/10' 
+              : 'border-white/15 bg-black/30 hover:border-blue-400 hover:bg-white/5',
             error && 'border-red-500'
           )}
           onDragOver={handleDragOver}
@@ -98,10 +98,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
               <Upload className="w-8 h-8" />
             </div>
             <div>
-              <p className="text-gray-700 font-medium">
+              <p className="font-medium text-slate-100">
                 点击上传或拖拽{typeLabels[type]}文件
               </p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="mt-1 text-sm text-slate-400">
                 {type === 'image' && '支持 JPG、PNG、GIF、WebP 格式，最大 10MB'}
                 {type === 'video' && '支持 MP4、WebM 格式，最大 50MB'}
                 {type === 'html' && '支持 HTML 或 ZIP 压缩包，最大 20MB'}
@@ -110,16 +110,16 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           </div>
         </div>
       ) : (
-        <div className="border border-gray-300 rounded-xl p-4 bg-gray-50">
+        <div className="rounded-xl border border-white/15 bg-black/30 p-4">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
               <Icon className="w-6 h-6 text-blue-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-800 truncate">
+              <p className="truncate text-sm font-medium text-slate-100">
                 {file.name}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-slate-400">
                 {(file.size / 1024 / 1024).toFixed(2)} MB
               </p>
             </div>
@@ -129,7 +129,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 e.stopPropagation();
                 onFileRemove();
               }}
-              className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+              className="p-2 text-slate-400 transition-colors hover:text-red-400"
             >
               <X className="w-5 h-5" />
             </button>

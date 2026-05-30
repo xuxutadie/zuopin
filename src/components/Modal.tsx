@@ -48,19 +48,19 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* 模态框内容 */}
       <div className={clsx(
-        'relative bg-white rounded-xl shadow-2xl w-full',
+        'relative w-full rounded-xl border border-white/10 bg-slate-950 text-slate-100 shadow-2xl shadow-black/60',
         'animate-in fade-in zoom-in-95 duration-200',
         sizeClasses[size]
       )}>
         {/* 头部 */}
         {title && (
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-800">
+          <div className="flex items-center justify-between border-b border-white/10 p-6">
+            <h2 className="text-xl font-semibold text-white">
               {title}
             </h2>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-white/10 hover:text-slate-100"
             >
               <X className="w-5 h-5" />
             </button>

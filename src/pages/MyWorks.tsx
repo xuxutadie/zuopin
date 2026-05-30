@@ -16,7 +16,7 @@ export const MyWorks: React.FC = () => {
   }, [fetchMyWorks]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-black">
       <Header />
       
       <main className="flex-1 py-8 px-4">
@@ -26,15 +26,15 @@ export const MyWorks: React.FC = () => {
             <div>
               <button
                 onClick={() => navigate('/student')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 mb-2"
+                className="mb-2 flex items-center space-x-2 text-slate-300 hover:text-white"
               >
                 <ArrowLeft className="w-5 h-5" />
                 <span>返回控制台</span>
               </button>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-white">
                 我的作品
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="mt-1 text-slate-300">
                 共 {myWorks.length} 个作品
               </p>
             </div>
@@ -46,9 +46,9 @@ export const MyWorks: React.FC = () => {
 
           {/* 作品列表 */}
           {isLoading ? (
-            <div className="bg-white rounded-xl shadow-md p-12 text-center">
+            <div className="rounded-xl border border-white/10 bg-slate-950/80 p-12 text-center shadow-md shadow-black/30">
               <div className="animate-spin w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
-              <p className="text-gray-600 mt-4">正在加载作品...</p>
+              <p className="mt-4 text-slate-300">正在加载作品...</p>
             </div>
           ) : myWorks.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -61,14 +61,14 @@ export const MyWorks: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-md p-12 text-center">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="rounded-xl border border-white/10 bg-slate-950/80 p-12 text-center shadow-md shadow-black/30">
+              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/10">
                 <FolderOpen className="w-10 h-10 text-gray-400" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              <h2 className="mb-2 text-xl font-semibold text-white">
                 还没有提交任何作品
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="mb-6 text-slate-300">
                 开始你的创作之旅，提交第一个作品吧！
               </p>
               <Button onClick={() => navigate('/student/submit')}>

@@ -129,8 +129,8 @@ export const Home: React.FC = () => {
                 <Users className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800 mb-1">简单易用</h3>
-                <p className="text-sm text-gray-600">学生注册登录后即可提交作品，流程清晰，适合课堂快速使用</p>
+                <h3 className="mb-1 font-semibold text-white">简单易用</h3>
+                <p className="text-sm text-slate-400">学生注册登录后即可提交作品，流程清晰，适合课堂快速使用</p>
               </div>
             </div>
 
@@ -139,8 +139,8 @@ export const Home: React.FC = () => {
                 <Download className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800 mb-1">便捷管理</h3>
-                <p className="text-sm text-gray-600">老师可批量下载所有作品，方便存档和评价</p>
+                <h3 className="mb-1 font-semibold text-white">便捷管理</h3>
+                <p className="text-sm text-slate-400">老师可批量下载所有作品，方便存档和评价</p>
               </div>
             </div>
 
@@ -149,8 +149,8 @@ export const Home: React.FC = () => {
                 <Sparkles className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800 mb-1">专为教育</h3>
-                <p className="text-sm text-gray-600">专为青少年AI培训和竞赛设计的作品收集工具</p>
+                <h3 className="mb-1 font-semibold text-white">专为教育</h3>
+                <p className="text-sm text-slate-400">专为青少年AI培训和竞赛设计的作品收集工具</p>
               </div>
             </div>
           </div>

@@ -64,14 +64,14 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
   return (
     <>
       <div className={`
-        bg-white rounded-xl shadow-md overflow-hidden
-        transition-all duration-300 hover:shadow-xl hover:-translate-y-1
+        overflow-hidden rounded-xl border border-white/10 bg-slate-950/80 shadow-md shadow-black/30
+        transition-all duration-300 hover:-translate-y-1 hover:border-blue-400/40 hover:shadow-xl hover:shadow-blue-950/30
         ${selectable ? 'cursor-pointer' : ''}
         ${selected ? 'ring-2 ring-blue-500' : ''}
       `}>
         {/* 预览区域 */}
         <div 
-          className="relative h-48 bg-gray-100 cursor-pointer"
+          className="relative h-48 cursor-pointer bg-slate-900"
           onClick={handlePreview}
         >
           {artwork.type === 'image' && (
@@ -88,19 +88,19 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
             />
           )}
           {artwork.type === 'html' && (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-900 to-purple-950">
               <div className="text-center">
                 <FileCode className="w-12 h-12 text-blue-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">HTML作品</p>
-                <p className="text-xs text-gray-500">点击预览</p>
+                <p className="text-sm text-slate-200">HTML作品</p>
+                <p className="text-xs text-slate-400">点击预览</p>
               </div>
             </div>
           )}
 
           {/* 类型标签 */}
-          <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1 flex items-center space-x-1">
+          <div className="absolute left-2 top-2 flex items-center space-x-1 rounded-lg border border-white/10 bg-black/70 px-2 py-1 backdrop-blur-sm">
             <Icon className="w-4 h-4 text-blue-600" />
-            <span className="text-xs font-medium text-gray-700">{typeLabels[artwork.type]}</span>
+            <span className="text-xs font-medium text-slate-100">{typeLabels[artwork.type]}</span>
           </div>
 
           {/* 选中标记 */}
@@ -110,7 +110,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
               transition-all
               ${selected 
                 ? 'bg-blue-600 border-blue-600' 
-                : 'bg-white/90 border-gray-300'
+                : 'border-slate-500 bg-black/70'
               }
             `}>
               {selected && (
@@ -124,23 +124,23 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
 
         {/* 内容区域 */}
         <div className="p-4">
-          <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
+          <h3 className="mb-2 line-clamp-2 font-semibold text-white">
             {artwork.title}
           </h3>
           
           {showStudent && (
-            <p className="text-sm text-gray-600 mb-2">
+            <p className="mb-2 text-sm text-slate-300">
               学生：{artwork.studentName}
             </p>
           )}
           
           {artwork.description && (
-            <p className="text-sm text-gray-500 mb-3 line-clamp-2">
+            <p className="mb-3 line-clamp-2 text-sm text-slate-400">
               {artwork.description}
             </p>
           )}
 
-          <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex items-center justify-between text-xs text-slate-400">
             <div className="flex items-center space-x-1">
               <Calendar className="w-3 h-3" />
               <span>{new Date(artwork.createdAt).toLocaleDateString()}</span>
@@ -150,13 +150,13 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
 
           {/* 操作按钮 */}
           {showActions && (
-            <div className="flex items-center space-x-2 mt-4 pt-3 border-t border-gray-200">
+            <div className="mt-4 flex items-center space-x-2 border-t border-white/10 pt-3">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handlePreview();
                 }}
-                className="flex-1 flex items-center justify-center space-x-1 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-blue-300 transition-colors hover:bg-blue-500/10"
               >
                 <Eye className="w-4 h-4" />
                 <span>预览</span>
@@ -166,7 +166,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
                   e.stopPropagation();
                   handleDownload();
                 }}
-                className="flex-1 flex items-center justify-center space-x-1 px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-green-300 transition-colors hover:bg-green-500/10"
               >
                 <Download className="w-4 h-4" />
                 <span>下载</span>
@@ -177,7 +177,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
                     e.stopPropagation();
                     handleDelete();
                   }}
-                  className="flex-1 flex items-center justify-center space-x-1 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-red-300 transition-colors hover:bg-red-500/10"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>删除</span>

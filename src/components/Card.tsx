@@ -17,9 +17,9 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       className={clsx(
-        'bg-white rounded-xl shadow-md p-6',
+        'rounded-xl border border-white/10 bg-slate-950/80 p-6 text-slate-100 shadow-md shadow-black/30 backdrop-blur',
         'transition-all duration-300',
-        hover && 'hover:shadow-xl hover:-translate-y-1 cursor-pointer',
+        hover && 'hover:-translate-y-1 hover:border-blue-400/40 hover:shadow-xl hover:shadow-blue-950/30 cursor-pointer',
         onClick && 'cursor-pointer',
         className
       )}
@@ -50,7 +50,7 @@ interface CardTitleProps {
 
 export const CardTitle: React.FC<CardTitleProps> = ({ children, className }) => {
   return (
-    <h3 className={clsx('text-xl font-semibold text-gray-800', className)}>
+    <h3 className={clsx('text-xl font-semibold text-white', className)}>
       {children}
     </h3>
   );
@@ -63,7 +63,7 @@ interface CardContentProps {
 
 export const CardContent: React.FC<CardContentProps> = ({ children, className }) => {
   return (
-    <div className={clsx('text-gray-600', className)}>
+    <div className={clsx('text-slate-300', className)}>
       {children}
     </div>
   );
@@ -76,7 +76,7 @@ interface CardFooterProps {
 
 export const CardFooter: React.FC<CardFooterProps> = ({ children, className }) => {
   return (
-    <div className={clsx('mt-4 pt-4 border-t border-gray-200', className)}>
+    <div className={clsx('mt-4 border-t border-white/10 pt-4', className)}>
       {children}
     </div>
   );

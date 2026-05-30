@@ -70,21 +70,42 @@ export const SubmitWork: React.FC = () => {
   };
 
   const typeOptions = [
-    { value: 'image', label: '图片作品', icon: FileImage, color: 'blue' },
-    { value: 'video', label: '视频作品', icon: FileVideo, color: 'green' },
-    { value: 'html', label: '网页作品', icon: FileCode, color: 'purple' }
+    {
+      value: 'image',
+      label: '图片作品',
+      icon: FileImage,
+      activeClassName: 'border-blue-500 bg-blue-500/10',
+      activeIconClassName: 'text-blue-400',
+      activeTextClassName: 'text-blue-200'
+    },
+    {
+      value: 'video',
+      label: '视频作品',
+      icon: FileVideo,
+      activeClassName: 'border-green-500 bg-green-500/10',
+      activeIconClassName: 'text-green-400',
+      activeTextClassName: 'text-green-200'
+    },
+    {
+      value: 'html',
+      label: '网页作品',
+      icon: FileCode,
+      activeClassName: 'border-purple-500 bg-purple-500/10',
+      activeIconClassName: 'text-purple-400',
+      activeTextClassName: 'text-purple-200'
+    }
   ] as const;
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <Card className="max-w-md w-full mx-4 text-center">
           <div className="py-8">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">提交成功！</h2>
-            <p className="text-gray-600 mb-6">你的作品已成功提交，正在跳转...</p>
+            <h2 className="mb-2 text-2xl font-bold text-white">提交成功！</h2>
+            <p className="mb-6 text-slate-300">你的作品已成功提交，正在跳转...</p>
             <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
           </div>
         </Card>
@@ -93,7 +114,7 @@ export const SubmitWork: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-black">
       <Header />
       
       <main className="flex-1 py-8 px-4">
@@ -101,7 +122,7 @@ export const SubmitWork: React.FC = () => {
           {/* 返回按钮 */}
           <button
             onClick={() => navigate('/student')}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 mb-6"
+            className="mb-6 flex items-center space-x-2 text-slate-300 hover:text-white"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>返回控制台</span>
@@ -113,7 +134,7 @@ export const SubmitWork: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* 作品类型选择 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="mb-3 block text-sm font-medium text-slate-200">
                   选择作品类型
                 </label>
                 <div className="grid grid-cols-3 gap-3">
@@ -131,21 +152,21 @@ export const SubmitWork: React.FC = () => {
                           'p-4 rounded-lg border-2 transition-all',
                           'flex flex-col items-center space-y-2',
                           workType === option.value
-                            ? `border-${option.color}-500 bg-${option.color}-50`
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? option.activeClassName
+                            : 'border-white/15 bg-black/30 hover:border-white/30'
                         )}
                       >
                         <Icon className={clsx(
                           'w-8 h-8',
                           workType === option.value 
-                            ? `text-${option.color}-600` 
-                            : 'text-gray-400'
+                            ? option.activeIconClassName
+                            : 'text-slate-500'
                         )} />
                         <span className={clsx(
                           'text-sm font-medium',
                           workType === option.value
-                            ? `text-${option.color}-700`
-                            : 'text-gray-600'
+                            ? option.activeTextClassName
+                            : 'text-slate-300'
                         )}>
                           {option.label}
                         </span>
@@ -157,7 +178,7 @@ export const SubmitWork: React.FC = () => {
 
               {/* 文件上传 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-slate-200">
                   上传作品文件
                 </label>
                 <FileUpload

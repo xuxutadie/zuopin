@@ -22,17 +22,17 @@ export const StudentDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-black">
       <Header />
       
       <main className="flex-1 py-8 px-4">
         <div className="container mx-auto">
           {/* 欢迎信息 */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-white mb-2">
               你好，{currentUser?.name}！
             </h1>
-            <p className="text-gray-600">
+            <p className="text-slate-300">
               欢迎来到学生控制台，开始你的创作之旅吧 🎨
             </p>
           </div>
@@ -43,25 +43,25 @@ export const StudentDashboard: React.FC = () => {
               <div className="text-3xl font-bold text-blue-600 mb-1">
                 {workStats.total}
               </div>
-              <div className="text-sm text-gray-600">我的作品</div>
+              <div className="text-sm text-slate-400">我的作品</div>
             </Card>
             <Card className="text-center">
               <div className="text-3xl font-bold text-green-600 mb-1">
                 {workStats.images}
               </div>
-              <div className="text-sm text-gray-600">图片作品</div>
+              <div className="text-sm text-slate-400">图片作品</div>
             </Card>
             <Card className="text-center">
               <div className="text-3xl font-bold text-purple-600 mb-1">
                 {workStats.videos}
               </div>
-              <div className="text-sm text-gray-600">视频作品</div>
+              <div className="text-sm text-slate-400">视频作品</div>
             </Card>
             <Card className="text-center">
               <div className="text-3xl font-bold text-orange-600 mb-1">
                 {workStats.htmls}
               </div>
-              <div className="text-sm text-gray-600">网页作品</div>
+              <div className="text-sm text-slate-400">网页作品</div>
             </Card>
           </div>
 
@@ -106,30 +106,30 @@ export const StudentDashboard: React.FC = () => {
           <Card>
             <CardTitle className="mb-4">支持的作品类型</CardTitle>
             <div className="grid md:grid-cols-3 gap-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="rounded-lg border border-blue-400/20 bg-blue-500/10 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <FileImage className="w-5 h-5 text-blue-600" />
-                  <span className="font-medium text-gray-800">图片作品</span>
+                  <span className="font-medium text-slate-100">图片作品</span>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-400">
                   JPG、PNG、GIF、WebP 格式，最大 10MB
                 </p>
               </div>
-              <div className="p-4 bg-green-50 rounded-lg">
+              <div className="rounded-lg border border-green-400/20 bg-green-500/10 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <FileVideo className="w-5 h-5 text-green-600" />
-                  <span className="font-medium text-gray-800">视频作品</span>
+                  <span className="font-medium text-slate-100">视频作品</span>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-400">
                   MP4、WebM 格式，最大 50MB
                 </p>
               </div>
-              <div className="p-4 bg-purple-50 rounded-lg">
+              <div className="rounded-lg border border-purple-400/20 bg-purple-500/10 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <FileCode className="w-5 h-5 text-purple-600" />
-                  <span className="font-medium text-gray-800">HTML作品</span>
+                  <span className="font-medium text-slate-100">HTML作品</span>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-400">
                   HTML 或 ZIP 格式，最大 20MB
                 </p>
               </div>

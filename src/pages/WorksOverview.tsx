@@ -67,7 +67,7 @@ export const WorksOverview: React.FC = () => {
   ] as const;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-black">
       <Header />
       
       <main className="flex-1 py-8 px-4">
@@ -76,17 +76,17 @@ export const WorksOverview: React.FC = () => {
           <div className="mb-6">
             <button
               onClick={() => navigate('/teacher')}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 mb-2"
+              className="mb-2 flex items-center space-x-2 text-slate-300 hover:text-white"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>返回控制台</span>
             </button>
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-white">
                   作品总览
                 </h1>
-                <p className="text-gray-600 mt-1">
+                <p className="mt-1 text-slate-300">
                   共 {artworks.length} 个作品 {selectedWorks.length > 0 && `（已选择 ${selectedWorks.length} 个）`}
                 </p>
               </div>
@@ -103,7 +103,7 @@ export const WorksOverview: React.FC = () => {
           </div>
 
           {/* 筛选栏 */}
-          <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+          <div className="mb-6 rounded-xl border border-white/10 bg-slate-950/80 p-4 shadow-md shadow-black/30">
             <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
               {/* 搜索框 */}
               <div className="flex-1">
@@ -114,7 +114,7 @@ export const WorksOverview: React.FC = () => {
                     placeholder="搜索作品名称、学生姓名..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-white/15 bg-black/45 py-2 pl-10 pr-4 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -132,14 +132,14 @@ export const WorksOverview: React.FC = () => {
                         'px-4 py-2 rounded-lg flex items-center space-x-2 transition-all',
                         isActive
                           ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          : 'bg-white/10 text-slate-300 hover:bg-white/15'
                       )}
                     >
                       <Icon className="w-4 h-4" />
                       <span className="text-sm font-medium">{filter.label}</span>
                       <span className={clsx(
                         'text-xs px-1.5 py-0.5 rounded-full',
-                        isActive ? 'bg-blue-500' : 'bg-gray-200'
+                        isActive ? 'bg-blue-500' : 'bg-white/10'
                       )}>
                         {filter.count}
                       </span>
@@ -153,7 +153,7 @@ export const WorksOverview: React.FC = () => {
                       setFilters({});
                       setSearchTerm('');
                     }}
-                    className="px-3 py-2 text-sm text-gray-600 hover:text-red-600 flex items-center space-x-1"
+                    className="flex items-center space-x-1 px-3 py-2 text-sm text-slate-300 hover:text-red-300"
                   >
                     <X className="w-4 h-4" />
                     <span>清除</span>
@@ -189,14 +189,14 @@ export const WorksOverview: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-md p-12 text-center">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="rounded-xl border border-white/10 bg-slate-950/80 p-12 text-center shadow-md shadow-black/30">
+              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/10">
                 <Search className="w-10 h-10 text-gray-400" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              <h2 className="mb-2 text-xl font-semibold text-white">
                 没有找到作品
               </h2>
-              <p className="text-gray-600">
+              <p className="text-slate-300">
                 {searchTerm || filters.type
                   ? '尝试调整筛选条件'
                   : '还没有学生提交作品'}

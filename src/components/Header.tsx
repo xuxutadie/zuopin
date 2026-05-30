@@ -7,7 +7,7 @@ interface HeaderProps {
   variant?: 'light' | 'dark';
 }
 
-export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'light' }) => {
+export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'dark' }) => {
   const { currentUser, logout } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const isDark = variant === 'dark';
@@ -37,19 +37,19 @@ export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'light
                 <>
                   <a 
                     href="/student" 
-                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                    className={`${isDark ? 'text-slate-300 hover:text-blue-300' : 'text-gray-600 hover:text-blue-600'} transition-colors`}
                   >
                     控制台
                   </a>
                   <a 
                     href="/student/submit" 
-                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                    className={`${isDark ? 'text-slate-300 hover:text-blue-300' : 'text-gray-600 hover:text-blue-600'} transition-colors`}
                   >
                     提交作品
                   </a>
                   <a 
                     href="/student/works" 
-                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                    className={`${isDark ? 'text-slate-300 hover:text-blue-300' : 'text-gray-600 hover:text-blue-600'} transition-colors`}
                   >
                     我的作品
                   </a>
@@ -59,13 +59,13 @@ export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'light
                 <>
                   <a 
                     href="/teacher" 
-                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                    className={`${isDark ? 'text-slate-300 hover:text-blue-300' : 'text-gray-600 hover:text-blue-600'} transition-colors`}
                   >
                     控制台
                   </a>
                   <a 
                     href="/teacher/works" 
-                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                    className={`${isDark ? 'text-slate-300 hover:text-blue-300' : 'text-gray-600 hover:text-blue-600'} transition-colors`}
                   >
                     作品总览
                   </a>
@@ -82,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'light
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                     <User className="w-4 h-4 text-blue-600" />
                   </div>
-                  <span className="text-sm text-gray-700">
+                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
                     {currentUser.name}
                   </span>
                   <span className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded-full">
@@ -91,7 +91,7 @@ export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'light
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 hover:text-red-600 transition-colors"
+                  className={`flex items-center space-x-1 px-3 py-2 text-sm transition-colors ${isDark ? 'text-slate-300 hover:text-red-300' : 'text-gray-600 hover:text-red-600'}`}
                 >
                   <LogOut className="w-4 h-4" />
                   <span className="hidden sm:inline">退出</span>
@@ -106,9 +106,9 @@ export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'light
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 {mobileMenuOpen ? (
-                  <X className="w-6 h-6 text-gray-600" />
+                  <X className={`h-6 w-6 ${isDark ? 'text-slate-200' : 'text-gray-600'}`} />
                 ) : (
-                  <Menu className="w-6 h-6 text-gray-600" />
+                  <Menu className={`h-6 w-6 ${isDark ? 'text-slate-200' : 'text-gray-600'}`} />
                 )}
               </button>
             )}
@@ -117,24 +117,24 @@ export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'light
 
         {/* 移动端菜单 */}
         {showNav && currentUser && mobileMenuOpen && (
-          <nav className="md:hidden py-4 border-t">
+          <nav className={`py-4 md:hidden ${isDark ? 'border-t border-white/10' : 'border-t'}`}>
             {currentUser.role === 'student' && (
               <>
                 <a 
                   href="/student" 
-                  className="block py-2 text-gray-600 hover:text-blue-600"
+                  className={`block py-2 ${isDark ? 'text-slate-300 hover:text-blue-300' : 'text-gray-600 hover:text-blue-600'}`}
                 >
                   控制台
                 </a>
                 <a 
                   href="/student/submit" 
-                  className="block py-2 text-gray-600 hover:text-blue-600"
+                  className={`block py-2 ${isDark ? 'text-slate-300 hover:text-blue-300' : 'text-gray-600 hover:text-blue-600'}`}
                 >
                   提交作品
                 </a>
                 <a 
                   href="/student/works" 
-                  className="block py-2 text-gray-600 hover:text-blue-600"
+                  className={`block py-2 ${isDark ? 'text-slate-300 hover:text-blue-300' : 'text-gray-600 hover:text-blue-600'}`}
                 >
                   我的作品
                 </a>
@@ -144,13 +144,13 @@ export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'light
               <>
                 <a 
                   href="/teacher" 
-                  className="block py-2 text-gray-600 hover:text-blue-600"
+                  className={`block py-2 ${isDark ? 'text-slate-300 hover:text-blue-300' : 'text-gray-600 hover:text-blue-600'}`}
                 >
                   控制台
                 </a>
                 <a 
                   href="/teacher/works" 
-                  className="block py-2 text-gray-600 hover:text-blue-600"
+                  className={`block py-2 ${isDark ? 'text-slate-300 hover:text-blue-300' : 'text-gray-600 hover:text-blue-600'}`}
                 >
                   作品总览
                 </a>

@@ -25,17 +25,17 @@ export const TeacherDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-black">
       <Header />
       
       <main className="flex-1 py-8 px-4">
         <div className="container mx-auto">
           {/* 欢迎信息 */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-white mb-2">
               老师控制台
             </h1>
-            <p className="text-gray-600">
+            <p className="text-slate-300">
               欢迎，{currentUser?.name}！在这里管理所有学生的作品 👋
             </p>
           </div>
@@ -46,31 +46,31 @@ export const TeacherDashboard: React.FC = () => {
               <div className="text-3xl font-bold text-blue-600 mb-1">
                 {stats.totalStudents}
               </div>
-              <div className="text-sm text-gray-600">学生数量</div>
+              <div className="text-sm text-slate-400">学生数量</div>
             </Card>
             <Card className="text-center">
               <div className="text-3xl font-bold text-green-600 mb-1">
                 {stats.totalWorks}
               </div>
-              <div className="text-sm text-gray-600">作品总数</div>
+              <div className="text-sm text-slate-400">作品总数</div>
             </Card>
             <Card className="text-center">
               <div className="text-3xl font-bold text-blue-500 mb-1">
                 {stats.images}
               </div>
-              <div className="text-sm text-gray-600">图片作品</div>
+              <div className="text-sm text-slate-400">图片作品</div>
             </Card>
             <Card className="text-center">
               <div className="text-3xl font-bold text-purple-500 mb-1">
                 {stats.videos}
               </div>
-              <div className="text-sm text-gray-600">视频作品</div>
+              <div className="text-sm text-slate-400">视频作品</div>
             </Card>
             <Card className="text-center">
               <div className="text-3xl font-bold text-orange-500 mb-1">
                 {stats.htmls}
               </div>
-              <div className="text-sm text-gray-600">网页作品</div>
+              <div className="text-sm text-slate-400">网页作品</div>
             </Card>
           </div>
 
@@ -112,21 +112,21 @@ export const TeacherDashboard: React.FC = () => {
           <Card>
             <CardTitle className="mb-4">老师功能说明</CardTitle>
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="rounded-lg border border-blue-400/20 bg-blue-500/10 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <FileImage className="w-5 h-5 text-blue-600" />
-                  <span className="font-medium text-gray-800">查看作品</span>
+                  <span className="font-medium text-slate-100">查看作品</span>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-400">
                   在作品总览页面查看所有学生提交的作品
                 </p>
               </div>
-              <div className="p-4 bg-green-50 rounded-lg">
+              <div className="rounded-lg border border-green-400/20 bg-green-500/10 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <Download className="w-5 h-5 text-green-600" />
-                  <span className="font-medium text-gray-800">下载作品</span>
+                  <span className="font-medium text-slate-100">下载作品</span>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-400">
                   支持单个下载或批量打包下载作品
                 </p>
               </div>

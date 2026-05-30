@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -7,6 +7,8 @@ import { Input } from '../components/Input';
 import { Card, CardTitle } from '../components/Card';
 import { useAuthStore } from '../stores/authStore';
 import { User, Shield, GraduationCap } from 'lucide-react';
+
+const MagicRings = lazy(() => import('../components/MagicRings'));
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -59,22 +61,52 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <Header showNav={false} />
+    <div className="min-h-screen flex flex-col bg-black">
+      <Header showNav={false} variant="dark" />
 
-      <section className="flex-1 flex items-center justify-center py-12 px-4">
-        <div className="container mx-auto">
+      <section className="relative flex min-h-[calc(100vh-64px)] flex-1 items-center justify-center overflow-hidden px-4 py-12">
+        <div className="pointer-events-none absolute inset-0 opacity-100">
+          <Suspense fallback={null}>
+            <MagicRings
+              color="#A855F7"
+              colorTwo="#6366F1"
+              ringCount={9}
+              speed={0.85}
+              attenuation={7}
+              lineThickness={2.6}
+              baseRadius={0.18}
+              radiusStep={0.14}
+              scaleRate={0.16}
+              opacity={1}
+              blur={0}
+              noiseAmount={0.1}
+              rotation={0}
+              ringGap={1.15}
+              fadeIn={0.7}
+              fadeOut={0.5}
+              followMouse={false}
+              mouseInfluence={0.2}
+              hoverScale={1.2}
+              parallax={0.08}
+              clickBurst={false}
+            />
+          </Suspense>
+        </div>
+
+        <div className="absolute inset-0 bg-black/35" />
+
+        <div className="container relative z-10 mx-auto">
           <div className="max-w-md mx-auto">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-white mb-2">
                 {mode === 'login' ? '欢迎回来' : '学生注册'}
               </h1>
-              <p className="text-gray-600">
+              <p className="text-slate-300">
                 {mode === 'login' ? '登录账号后开始提交或管理作品' : '创建学生账号后即可提交作品'}
               </p>
             </div>
 
-            <Card className="mb-6">
+            <Card className="mb-6 bg-black/55">
               <div className="flex space-x-2">
                 <button
                   type="button"
@@ -84,7 +116,7 @@ export const Login: React.FC = () => {
                     transition-all duration-200 font-medium
                     ${role === 'student'
                       ? 'bg-blue-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-white/10 text-slate-300 hover:bg-white/15'
                     }
                   `}
                 >
@@ -100,7 +132,7 @@ export const Login: React.FC = () => {
                     transition-all duration-200 font-medium
                     ${role === 'teacher'
                       ? 'bg-purple-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-white/10 text-slate-300 hover:bg-white/15'
                     }
                     ${mode === 'register' ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
@@ -111,7 +143,7 @@ export const Login: React.FC = () => {
               </div>
             </Card>
 
-            <Card>
+            <Card className="bg-black/55">
               <CardTitle className="mb-6">
                 {mode === 'login' ? '账号登录' : '学生账号注册'}
               </CardTitle>
@@ -151,12 +183,12 @@ export const Login: React.FC = () => {
               </form>
 
               <div className="mt-6 text-center">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-300">
                   {mode === 'login' ? '还没有账号？' : '已有账号？'}
                   <button
                     type="button"
                     onClick={switchMode}
-                    className="ml-1 text-blue-600 hover:text-blue-700 font-medium"
+                    className="ml-1 font-medium text-blue-300 hover:text-blue-200"
                   >
                     {mode === 'login' ? '立即注册' : '立即登录'}
                   </button>
@@ -166,10 +198,10 @@ export const Login: React.FC = () => {
             </Card>
 
             {role === 'student' && (
-              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="mt-6 rounded-lg border border-blue-400/20 bg-blue-500/10 p-4 backdrop-blur">
                 <div className="flex items-start space-x-2">
                   <User className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-blue-800">
+                  <div className="text-sm text-blue-100">
                     <p className="font-medium mb-1">温馨提示：</p>
                     <ul className="list-disc list-inside space-y-1 text-xs">
                       <li>学生注册和登录都需要输入密码</li>
