@@ -8,6 +8,9 @@ const connectionString =
   process.env.DATABASE_URL ||
   process.env.POSTGRES_CONNECTION_STRING ||
   process.env.POSTGRES_URI;
+const isZeaburPostgres =
+  !process.env.DATABASE_URL &&
+  Boolean(process.env.POSTGRES_CONNECTION_STRING || process.env.POSTGRES_URI);
 
 if (!connectionString) {
   throw new Error('缺少数据库连接环境变量：DATABASE_URL 或 POSTGRES_CONNECTION_STRING');
@@ -16,9 +19,7 @@ if (!connectionString) {
 // 创建数据库连接池
 const pool = new Pool({
   connectionString,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: isZeaburPostgres ? false : { rejectUnauthorized: false }
 });
 
 // 测试数据库连接
