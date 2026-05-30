@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { Button } from '../components/Button';
 import { Card, CardTitle, CardContent } from '../components/Card';
 import { FileImage, FileVideo, FileCode, Sparkles, Users, Download } from 'lucide-react';
+
+const MagicRings = lazy(() => import('../components/MagicRings'));
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -14,8 +16,35 @@ export const Home: React.FC = () => {
       <Header showNav={false} />
       
       {/* Hero Section */}
-      <section className="flex-1 flex items-center justify-center py-20 px-4">
-        <div className="container mx-auto">
+      <section className="relative flex-1 flex items-center justify-center overflow-hidden py-20 px-4">
+        <div className="pointer-events-none absolute inset-x-0 top-10 mx-auto h-[300px] w-[min(92vw,600px)] md:h-[400px] opacity-80">
+          <Suspense fallback={null}>
+            <MagicRings
+              color="#A855F7"
+              colorTwo="#6366F1"
+              ringCount={6}
+              speed={1}
+              attenuation={10}
+              lineThickness={2}
+              baseRadius={0.35}
+              radiusStep={0.1}
+              scaleRate={0.1}
+              opacity={1}
+              blur={0}
+              noiseAmount={0.1}
+              rotation={0}
+              ringGap={1.5}
+              fadeIn={0.7}
+              fadeOut={0.5}
+              followMouse={false}
+              mouseInfluence={0.2}
+              hoverScale={1.2}
+              parallax={0.05}
+              clickBurst={false}
+            />
+          </Suspense>
+        </div>
+        <div className="container relative z-10 mx-auto">
           <div className="text-center max-w-4xl mx-auto">
             {/* 主标题 */}
             <div className="mb-6">
