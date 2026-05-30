@@ -12,11 +12,11 @@ export const Home: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <Header showNav={false} />
+    <div className="min-h-screen flex flex-col bg-black">
+      <Header showNav={false} variant="dark" />
 
-      <section className="relative min-h-[calc(100vh-64px)] overflow-hidden px-4">
-        <div className="pointer-events-none absolute inset-0 opacity-90">
+      <section className="relative min-h-[calc(100vh-64px)] overflow-hidden bg-black px-4">
+        <div className="pointer-events-none absolute inset-0 opacity-100">
           <Suspense fallback={null}>
             <MagicRings
               color="#A855F7"
@@ -44,20 +44,20 @@ export const Home: React.FC = () => {
           </Suspense>
         </div>
 
-        <div className="absolute inset-0 bg-white/25" />
+        <div className="absolute inset-0 bg-black/20" />
 
         <div className="container relative z-10 mx-auto flex min-h-[calc(100vh-64px)] items-center justify-center">
           <div className="max-w-4xl text-center">
-            <div className="inline-flex items-center space-x-2 rounded-full bg-white/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm backdrop-blur mb-6">
+            <div className="inline-flex items-center space-x-2 rounded-full border border-white/15 bg-black/45 px-4 py-2 text-sm font-medium text-blue-100 shadow-sm backdrop-blur mb-6">
               <Sparkles className="w-4 h-4" />
               <span>专为AI教育设计</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              <span className="bg-gradient-to-r from-white via-blue-200 to-purple-300 bg-clip-text text-transparent">
                 AI作品收集平台
               </span>
             </h1>
-            <p className="text-xl text-gray-700 mb-8 leading-relaxed">
+            <p className="text-xl text-slate-200 mb-8 leading-relaxed">
               轻松收集、管理和展示学生的AI创作成果。<br />
               支持图片、视频、HTML作品，让创作展示更便捷！
             </p>
@@ -83,7 +83,7 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      <section className="px-4 py-16">
+      <section className="bg-black px-4 py-16">
         <div className="container mx-auto max-w-4xl">
           <div className="grid md:grid-cols-3 gap-6">
             <Card hover className="text-center">

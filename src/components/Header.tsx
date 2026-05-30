@@ -4,18 +4,20 @@ import { useAuthStore } from '../stores/authStore';
 
 interface HeaderProps {
   showNav?: boolean;
+  variant?: 'light' | 'dark';
 }
 
-export const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
+export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'light' }) => {
   const { currentUser, logout } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const isDark = variant === 'dark';
 
   const handleLogout = () => {
     logout();
   };
 
   return (
-    <header className="bg-white shadow-md sticky top-0 z-50">
+    <header className={`${isDark ? 'border-b border-white/10 bg-black text-white shadow-none' : 'bg-white shadow-md'} sticky top-0 z-50`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo区域 */}
@@ -23,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
               <User className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-800">
+            <span className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
               AI作品收集
             </span>
           </div>
