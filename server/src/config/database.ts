@@ -70,15 +70,22 @@ export async function initializeDatabase(): Promise<void> {
     console.log('✅ 作品表创建成功');
 
     // 创建老师账号
-    const teacherPassword = process.env.TEACHER_PASSWORD || 'admin123';
+    const teacherName = process.env.TEACHER_NAME || '30761985';
+    const teacherPassword = process.env.TEACHER_PASSWORD || 'xxxb520';
     const bcrypt = require('bcryptjs');
     const hashedPassword = await bcrypt.hash(teacherPassword, 10);
 
     await client.query(`
       INSERT INTO users (name, role, password)
-      VALUES ('admin', 'teacher', $1)
-      ON CONFLICT (name, role) DO UPDATE SET password = $1
-    `, [hashedPassword]);
+      VALUES ($1, 'teacher', $2)
+      ON CONFLICT (name, role) DO UPDATE SET password = $2
+    `, [teacherName, hashedPassword]);
+
+    if (teacherName !== 'admin') {
+      await client.query(
+        `DELETE FROM users WHERE name = 'admin' AND role = 'teacher'`
+      );
+    }
     console.log('✅ 老师账号创建成功');
 
   } catch (error) {
