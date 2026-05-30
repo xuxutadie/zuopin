@@ -4,9 +4,18 @@ import dotenv from 'dotenv';
 // 加载环境变量
 dotenv.config();
 
+const connectionString =
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_CONNECTION_STRING ||
+  process.env.POSTGRES_URI;
+
+if (!connectionString) {
+  throw new Error('缺少数据库连接环境变量：DATABASE_URL 或 POSTGRES_CONNECTION_STRING');
+}
+
 // 创建数据库连接池
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString,
   ssl: {
     rejectUnauthorized: false
   }
