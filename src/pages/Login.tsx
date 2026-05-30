@@ -119,7 +119,7 @@ export const Login: React.FC = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <Input
                   label={role === 'teacher' ? '账号' : '姓名'}
-                  placeholder={role === 'teacher' ? '输入老师账号' : '输入学生姓名'}
+                  placeholder={role === 'teacher' ? '输入账号' : '输入学生姓名'}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
