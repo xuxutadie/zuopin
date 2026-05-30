@@ -163,14 +163,6 @@ export const Login: React.FC = () => {
                 </p>
               </div>
 
-              {role === 'teacher' && (
-                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-xs text-yellow-800">
-                    <strong>老师账号：</strong>30761985<br />
-                    <strong>默认密码：</strong>xxxb520
-                  </p>
-                </div>
-              )}
             </Card>
 
             {role === 'student' && (
