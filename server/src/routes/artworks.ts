@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, RequestHandler } from 'express';
 import multer from 'multer';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -22,7 +22,6 @@ const storage = multer.diskStorage({
     cb(null, uniqueName);
   }
 });
-
 const upload = multer({
   storage,
   limits: {
@@ -31,11 +30,13 @@ const upload = multer({
 });
 
 // 提交作品
+const uploadSingleFile = upload.single('file') as unknown as RequestHandler;
+
 router.post(
   '/',
   authenticateToken,
   requireStudent,
-  upload.single('file'),
+  uploadSingleFile,
   async (req: Request, res: Response) => {
     try {
       if (!req.file) {
