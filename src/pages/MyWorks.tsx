@@ -1,19 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { Button } from '../components/Button';
 import { ArtworkCard } from '../components/ArtworkCard';
-import { useAuthStore } from '../stores/authStore';
 import { useArtworkStore } from '../stores/artworkStore';
 import { ArrowLeft, Plus, FolderOpen } from 'lucide-react';
 
 export const MyWorks: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuthStore();
-  const { getStudentWorks, deleteArtwork } = useArtworkStore();
+  const { myWorks, fetchMyWorks, deleteArtwork, isLoading } = useArtworkStore();
   
-  const myWorks = currentUser ? getStudentWorks(currentUser.id) : [];
+  useEffect(() => {
+    fetchMyWorks();
+  }, [fetchMyWorks]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -45,7 +45,12 @@ export const MyWorks: React.FC = () => {
           </div>
 
           {/* 作品列表 */}
-          {myWorks.length > 0 ? (
+          {isLoading ? (
+            <div className="bg-white rounded-xl shadow-md p-12 text-center">
+              <div className="animate-spin w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
+              <p className="text-gray-600 mt-4">正在加载作品...</p>
+            </div>
+          ) : myWorks.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {myWorks.map((artwork) => (
                 <ArtworkCard

@@ -63,7 +63,7 @@ router.get(
         title: artwork.title,
         description: artwork.description,
         type: artwork.type,
-        fileName: artwork.file_name,
+        fileName: artwork.file_path,
         fileSize: artwork.file_size,
         mimeType: artwork.mime_type,
         createdAt: artwork.created_at

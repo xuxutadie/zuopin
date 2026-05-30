@@ -100,11 +100,12 @@ router.post(
         message: '作品提交成功',
         artwork: {
           id: artwork.id,
+          studentId: artwork.student_id,
           studentName: artwork.student_name,
           title: artwork.title,
           description: artwork.description,
           type: artwork.type,
-          fileName: artwork.file_name,
+          fileName: artwork.file_path,
           fileSize: artwork.file_size,
           mimeType: artwork.mime_type,
           createdAt: artwork.created_at
@@ -133,11 +134,12 @@ router.get(
 
       const artworks = result.rows.map(artwork => ({
         id: artwork.id,
+        studentId: artwork.student_id,
         studentName: artwork.student_name,
         title: artwork.title,
         description: artwork.description,
         type: artwork.type,
-        fileName: artwork.file_name,
+        fileName: artwork.file_path,
         fileSize: artwork.file_size,
         mimeType: artwork.mime_type,
         createdAt: artwork.created_at
