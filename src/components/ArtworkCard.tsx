@@ -39,13 +39,17 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
 
   const Icon = typeIcons[artwork.type];
 
-  const handleDownload = () => {
-    downloadSingleFile(artwork);
+  const handleDownload = async () => {
+    try {
+      await downloadSingleFile(artwork);
+    } catch (error) {
+      alert('下载失败，请重试');
+    }
   };
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
     if (artwork.type === 'html') {
-      previewHtmlWork(artwork);
+      await previewHtmlWork(artwork);
     } else {
       setShowPreview(true);
     }

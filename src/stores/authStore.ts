@@ -11,10 +11,10 @@ interface AuthState {
   initialize: () => void;
 
   // 用户注册
-  register: (name: string) => Promise<{ success: boolean; error?: string }>;
+  register: (name: string, password: string) => Promise<{ success: boolean; error?: string }>;
 
   // 用户登录
-  login: (name: string, role: 'student' | 'teacher', password?: string) => Promise<{ success: boolean; error?: string }>;
+  login: (name: string, role: 'student' | 'teacher', password: string) => Promise<{ success: boolean; error?: string }>;
 
   // 用户登出
   logout: () => void;
@@ -48,9 +48,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  register: async (name) => {
+  register: async (name, password) => {
     try {
-      const result = await authApi.register(name);
+      const result = await authApi.register(name, password);
       
       if (result.success && result.data) {
         const { user, token } = result.data;

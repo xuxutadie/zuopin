@@ -70,13 +70,13 @@ async function request<T>(
 // 用户认证API
 export const authApi = {
   // 学生注册
-  register: async (name: string) => {
+  register: async (name: string, password: string) => {
     return request<{
       user: { id: string; name: string; role: string };
       token: string;
     }>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, role: 'student' })
+      body: JSON.stringify({ name, role: 'student', password })
     });
   },
 

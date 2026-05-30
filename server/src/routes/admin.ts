@@ -6,6 +6,25 @@ import { authenticateToken, requireTeacher } from '../middleware/auth';
 
 const router: Router = Router();
 
+function sanitizeFileName(name: string): string {
+  return name
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, '_')
+    .replace(/\s+/g, ' ')
+    .slice(0, 80) || '未命名作品';
+}
+
+function getArtworkDownloadName(artwork: any): string {
+  const title = sanitizeFileName(artwork.title);
+  const extension = path.extname(artwork.file_name || artwork.file_path || '');
+
+  if (!extension || title.toLowerCase().endsWith(extension.toLowerCase())) {
+    return title;
+  }
+
+  return `${title}${extension}`;
+}
+
 // 获取所有作品列表
 router.get(
   '/',
@@ -79,7 +98,7 @@ router.get(
       const artwork = result.rows[0];
       const filePath = path.join(__dirname, '../../uploads', artwork.file_path);
 
-      res.download(filePath, artwork.file_name);
+      res.download(filePath, getArtworkDownloadName(artwork));
     } catch (error) {
       console.error('下载作品错误:', error);
       res.status(500).json({ error: '服务器错误，请重试' });
@@ -123,7 +142,7 @@ router.post(
       // 添加文件到压缩包
       for (const artwork of artworks) {
         const filePath = path.join(__dirname, '../../uploads', artwork.file_path);
-        archive.file(filePath, { name: `${artwork.student_name}/${artwork.file_name}` });
+        archive.file(filePath, { name: `${artwork.student_name}/${getArtworkDownloadName(artwork)}` });
       }
 
       archive.finalize();
