@@ -50,6 +50,13 @@ export async function initializeDatabase(): Promise<void> {
     `);
     console.log('✅ 用户表创建成功');
 
+    // 兼容已经部署过的旧数据库：CREATE TABLE IF NOT EXISTS 不会自动补新增字段。
+    await client.query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS password VARCHAR(255)
+    `);
+    console.log('✅ 用户表字段检查完成');
+
     // 创建作品表
     await client.query(`
       CREATE TABLE IF NOT EXISTS artworks (

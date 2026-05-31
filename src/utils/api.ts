@@ -1,5 +1,6 @@
-// API配置
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+// API配置。本地开发默认连接线上后端；如需连接本地后端，可设置 VITE_API_URL。
+const LOCAL_DEV_API_URL = 'https://zuopin-api.zeabur.app/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? LOCAL_DEV_API_URL : '/api');
 
 // 获取存储的Token
 function getToken(): string | null {
@@ -21,6 +22,20 @@ interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
+}
+
+async function readResponseData(response: Response): Promise<any> {
+  const text = await response.text();
+
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: text };
+  }
 }
 
 // 通用请求函数
@@ -45,12 +60,12 @@ async function request<T>(
       headers
     });
 
-    const data = await response.json();
+    const data = await readResponseData(response);
 
     if (!response.ok) {
       return {
         success: false,
-        error: data.error || '请求失败'
+        error: data?.error || `请求失败（${response.status}）`
       };
     }
 
@@ -107,12 +122,12 @@ export const artworkApi = {
         body: formData
       });
 
-      const data = await response.json();
+      const data = await readResponseData(response);
 
       if (!response.ok) {
         return {
           success: false,
-          error: data.error || '提交失败'
+          error: data?.error || `提交失败（${response.status}）`
         };
       }
 
@@ -184,10 +199,10 @@ export const adminApi = {
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await readResponseData(response);
         return {
           success: false,
-          error: data.error || '下载失败'
+          error: data?.error || `下载失败（${response.status}）`
         };
       }
 
