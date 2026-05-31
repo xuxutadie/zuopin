@@ -5,11 +5,13 @@ import { Eye, EyeOff } from 'lucide-react';
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  labelClassName?: string;
 }
 
 export const Input: React.FC<InputProps> = ({
   label,
   error,
+  labelClassName,
   className,
   type = 'text',
   ...props
@@ -20,7 +22,7 @@ export const Input: React.FC<InputProps> = ({
   return (
     <div className="w-full">
       {label && (
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={clsx('mb-2 block text-sm font-medium text-slate-200', labelClassName)}>
           {label}
         </label>
       )}
@@ -61,18 +63,20 @@ export const Input: React.FC<InputProps> = ({
 interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
+  labelClassName?: string;
 }
 
 export const Textarea: React.FC<TextareaProps> = ({
   label,
   error,
+  labelClassName,
   className,
   ...props
 }) => {
   return (
     <div className="w-full">
       {label && (
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={clsx('mb-2 block text-sm font-medium text-slate-200', labelClassName)}>
           {label}
         </label>
       )}

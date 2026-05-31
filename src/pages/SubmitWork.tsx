@@ -74,38 +74,41 @@ export const SubmitWork: React.FC = () => {
       value: 'image',
       label: '图片作品',
       icon: FileImage,
-      activeClassName: 'border-blue-500 bg-blue-500/10',
-      activeIconClassName: 'text-blue-400',
-      activeTextClassName: 'text-blue-200'
+      activeClassName: 'border-blue-500 bg-blue-50',
+      activeIconClassName: 'text-blue-600',
+      activeTextClassName: 'text-blue-700'
     },
     {
       value: 'video',
       label: '视频作品',
       icon: FileVideo,
-      activeClassName: 'border-green-500 bg-green-500/10',
-      activeIconClassName: 'text-green-400',
-      activeTextClassName: 'text-green-200'
+      activeClassName: 'border-green-500 bg-green-50',
+      activeIconClassName: 'text-green-600',
+      activeTextClassName: 'text-green-700'
     },
     {
       value: 'html',
       label: '网页作品',
       icon: FileCode,
-      activeClassName: 'border-purple-500 bg-purple-500/10',
-      activeIconClassName: 'text-purple-400',
-      activeTextClassName: 'text-purple-200'
+      activeClassName: 'border-purple-500 bg-purple-50',
+      activeIconClassName: 'text-purple-600',
+      activeTextClassName: 'text-purple-700'
     }
   ] as const;
+  const lightCardClassName = '!border-slate-200 !bg-white !text-slate-900 shadow-lg shadow-black/20';
+  const lightInputClassName = '!border-slate-300 !bg-white !text-slate-900 placeholder:!text-slate-400';
+  const lightLabelClassName = 'text-slate-700';
 
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
-        <Card className="max-w-md w-full mx-4 text-center">
+        <Card className={`max-w-md w-full mx-4 text-center ${lightCardClassName}`}>
           <div className="py-8">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
-            <h2 className="mb-2 text-2xl font-bold text-white">提交成功！</h2>
-            <p className="mb-6 text-slate-300">你的作品已成功提交，正在跳转...</p>
+            <h2 className="mb-2 text-2xl font-bold text-slate-900">提交成功！</h2>
+            <p className="mb-6 text-slate-600">你的作品已成功提交，正在跳转...</p>
             <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
           </div>
         </Card>
@@ -128,13 +131,13 @@ export const SubmitWork: React.FC = () => {
             <span>返回控制台</span>
           </button>
 
-          <Card>
-            <CardTitle className="mb-6">提交新作品</CardTitle>
+          <Card className={lightCardClassName}>
+            <CardTitle className="mb-6 text-slate-900">提交新作品</CardTitle>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* 作品类型选择 */}
               <div>
-                <label className="mb-3 block text-sm font-medium text-slate-200">
+                <label className="mb-3 block text-sm font-semibold text-slate-700">
                   选择作品类型
                 </label>
                 <div className="grid grid-cols-3 gap-3">
@@ -153,7 +156,7 @@ export const SubmitWork: React.FC = () => {
                           'flex flex-col items-center space-y-2',
                           workType === option.value
                             ? option.activeClassName
-                            : 'border-white/15 bg-black/30 hover:border-white/30'
+                            : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100'
                         )}
                       >
                         <Icon className={clsx(
@@ -166,7 +169,7 @@ export const SubmitWork: React.FC = () => {
                           'text-sm font-medium',
                           workType === option.value
                             ? option.activeTextClassName
-                            : 'text-slate-300'
+                            : 'text-slate-700'
                         )}>
                           {option.label}
                         </span>
@@ -178,7 +181,7 @@ export const SubmitWork: React.FC = () => {
 
               {/* 文件上传 */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-200">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   上传作品文件
                 </label>
                 <FileUpload
@@ -186,6 +189,7 @@ export const SubmitWork: React.FC = () => {
                   file={file}
                   onFileSelect={setFile}
                   onFileRemove={() => setFile(null)}
+                  variant="light"
                 />
               </div>
 
@@ -195,6 +199,8 @@ export const SubmitWork: React.FC = () => {
                 placeholder="给你的作品起个名字"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                labelClassName={lightLabelClassName}
+                className={lightInputClassName}
                 required
               />
 
@@ -204,6 +210,8 @@ export const SubmitWork: React.FC = () => {
                 placeholder="简单描述一下你的作品"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                labelClassName={lightLabelClassName}
+                className={lightInputClassName}
                 rows={4}
               />
 
@@ -220,7 +228,7 @@ export const SubmitWork: React.FC = () => {
                   type="button"
                   variant="secondary"
                   onClick={() => navigate('/student')}
-                  className="flex-1"
+                  className="flex-1 border-slate-200 bg-slate-100 text-slate-800 hover:bg-slate-200"
                 >
                   取消
                 </Button>

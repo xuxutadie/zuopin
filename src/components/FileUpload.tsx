@@ -8,6 +8,7 @@ interface FileUploadProps {
   onFileSelect: (file: File) => void;
   onFileRemove: () => void;
   error?: string;
+  variant?: 'dark' | 'light';
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
@@ -15,9 +16,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   file,
   onFileSelect,
   onFileRemove,
-  error
+  error,
+  variant = 'dark'
 }) => {
   const [isDragging, setIsDragging] = React.useState(false);
+  const isLight = variant === 'light';
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -74,8 +77,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             'border-2 border-dashed rounded-xl p-8 text-center',
             'transition-all duration-200 cursor-pointer',
             isDragging 
-              ? 'border-blue-500 bg-blue-500/10' 
-              : 'border-white/15 bg-black/30 hover:border-blue-400 hover:bg-white/5',
+              ? 'border-blue-500 bg-blue-500/10'
+              : isLight
+                ? 'border-slate-300 bg-slate-50 hover:border-blue-400 hover:bg-blue-50'
+                : 'border-white/15 bg-black/30 hover:border-blue-400 hover:bg-white/5',
             error && 'border-red-500'
           )}
           onDragOver={handleDragOver}
@@ -98,10 +103,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
               <Upload className="w-8 h-8" />
             </div>
             <div>
-              <p className="font-medium text-slate-100">
+              <p className={clsx('font-medium', isLight ? 'text-slate-900' : 'text-slate-100')}>
                 点击上传或拖拽{typeLabels[type]}文件
               </p>
-              <p className="mt-1 text-sm text-slate-400">
+              <p className={clsx('mt-1 text-sm', isLight ? 'text-slate-600' : 'text-slate-400')}>
                 {type === 'image' && '支持 JPG、PNG、GIF、WebP 格式，最大 10MB'}
                 {type === 'video' && '支持 MP4、WebM 格式，最大 50MB'}
                 {type === 'html' && '支持 HTML 或 ZIP 压缩包，最大 20MB'}
@@ -110,16 +115,19 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           </div>
         </div>
       ) : (
-        <div className="rounded-xl border border-white/15 bg-black/30 p-4">
+        <div className={clsx(
+          'rounded-xl border p-4',
+          isLight ? 'border-slate-300 bg-slate-50' : 'border-white/15 bg-black/30'
+        )}>
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
               <Icon className="w-6 h-6 text-blue-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="truncate text-sm font-medium text-slate-100">
+              <p className={clsx('truncate text-sm font-medium', isLight ? 'text-slate-900' : 'text-slate-100')}>
                 {file.name}
               </p>
-              <p className="text-xs text-slate-400">
+              <p className={clsx('text-xs', isLight ? 'text-slate-600' : 'text-slate-400')}>
                 {(file.size / 1024 / 1024).toFixed(2)} MB
               </p>
             </div>
@@ -129,7 +137,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 e.stopPropagation();
                 onFileRemove();
               }}
-              className="p-2 text-slate-400 transition-colors hover:text-red-400"
+              className={clsx(
+                'p-2 transition-colors hover:text-red-500',
+                isLight ? 'text-slate-500' : 'text-slate-400'
+              )}
             >
               <X className="w-5 h-5" />
             </button>
