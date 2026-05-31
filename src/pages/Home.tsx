@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -6,46 +6,14 @@ import { Button } from '../components/Button';
 import { Card, CardTitle, CardContent } from '../components/Card';
 import { FileImage, FileVideo, FileCode, Sparkles, Users, Download } from 'lucide-react';
 
-const MagicRings = lazy(() => import('../components/MagicRings'));
-
 export const Home: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col bg-black">
+    <div className="min-h-screen flex flex-col">
       <Header showNav={false} variant="dark" />
 
-      <section className="relative min-h-[calc(100vh-64px)] overflow-hidden bg-black px-4">
-        <div className="pointer-events-none absolute inset-0 opacity-100">
-          <Suspense fallback={null}>
-            <MagicRings
-              color="#A855F7"
-              colorTwo="#6366F1"
-              ringCount={9}
-              speed={0.85}
-              attenuation={7}
-              lineThickness={2.6}
-              baseRadius={0.18}
-              radiusStep={0.14}
-              scaleRate={0.16}
-              opacity={1}
-              blur={0}
-              noiseAmount={0.1}
-              rotation={0}
-              ringGap={1.15}
-              fadeIn={0.7}
-              fadeOut={0.5}
-              followMouse={false}
-              mouseInfluence={0.2}
-              hoverScale={1.2}
-              parallax={0.08}
-              clickBurst={false}
-            />
-          </Suspense>
-        </div>
-
-        <div className="absolute inset-0 bg-black/20" />
-
+      <section className="relative min-h-[calc(100vh-64px)] overflow-hidden px-4">
         <div className="container relative z-10 mx-auto flex min-h-[calc(100vh-64px)] items-center justify-center">
           <div className="max-w-4xl text-center">
             <div className="inline-flex items-center space-x-2 rounded-full border border-white/15 bg-black/45 px-4 py-2 text-sm font-medium text-blue-100 shadow-sm backdrop-blur mb-6">
@@ -83,7 +51,7 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      <section className="bg-black px-4 py-16">
+      <section className="px-4 py-16">
         <div className="container mx-auto max-w-4xl">
           <div className="grid md:grid-cols-3 gap-6">
             <Card hover className="text-center">

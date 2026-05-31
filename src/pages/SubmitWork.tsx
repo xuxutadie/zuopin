@@ -101,7 +101,7 @@ export const SubmitWork: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="min-h-screen flex items-center justify-center">
         <Card className={`max-w-md w-full mx-4 text-center ${lightCardClassName}`}>
           <div className="py-8">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -117,7 +117,7 @@ export const SubmitWork: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-black">
+    <div className="min-h-screen flex flex-col">
       <Header />
       
       <main className="flex-1 py-8 px-4">

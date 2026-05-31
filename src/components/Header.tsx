@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'dark'
   };
 
   return (
-    <header className={`${isDark ? 'border-b border-white/10 bg-black text-white shadow-none' : 'bg-white shadow-md'} sticky top-0 z-50`}>
+    <header className={`${isDark ? 'border-b border-white/10 bg-black/80 text-white shadow-none backdrop-blur' : 'bg-white shadow-md'} sticky top-0 z-50`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo区域 */}

@@ -67,7 +67,7 @@ export const WorksOverview: React.FC = () => {
   ] as const;
 
   return (
-    <div className="min-h-screen flex flex-col bg-black">
+    <div className="min-h-screen flex flex-col">
       <Header />
       
       <main className="flex-1 py-8 px-4">

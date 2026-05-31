@@ -26,7 +26,7 @@ export const TeacherDashboard: React.FC = () => {
   const lightCardClassName = '!border-slate-200 !bg-white !text-slate-900 shadow-lg shadow-black/20';
 
   return (
-    <div className="min-h-screen flex flex-col bg-black">
+    <div className="min-h-screen flex flex-col">
       <Header />
       
       <main className="flex-1 py-8 px-4">
