@@ -37,10 +37,11 @@ router.post(
   authenticateToken,
   requireStudent,
   upload.single('file'),
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       if (!req.file) {
-        return res.status(400).json({ error: '请上传文件' });
+        res.status(400).json({ error: '请上传文件' });
+        return;
       }
 
       const { title, description, type } = req.body;
@@ -50,25 +51,29 @@ router.post(
       if (!title || !type) {
         // 删除已上传的文件
         fs.unlinkSync(file.path);
-        return res.status(400).json({ error: '请提供作品名称和类型' });
+        res.status(400).json({ error: '请提供作品名称和类型' });
+        return;
       }
 
       // 验证作品类型
       if (!['image', 'video', 'html'].includes(type)) {
         fs.unlinkSync(file.path);
-        return res.status(400).json({ error: '无效的作品类型' });
+        res.status(400).json({ error: '无效的作品类型' });
+        return;
       }
 
       // 验证文件类型
       if (!validateFileType(file.mimetype, file.originalname, type)) {
         fs.unlinkSync(file.path);
-        return res.status(400).json({ error: '文件类型不匹配' });
+        res.status(400).json({ error: '文件类型不匹配' });
+        return;
       }
 
       // 验证文件大小
       if (!validateFileSize(file.size, type)) {
         fs.unlinkSync(file.path);
-        return res.status(400).json({ error: '文件大小超过限制' });
+        res.status(400).json({ error: '文件大小超过限制' });
+        return;
       }
 
       // 保存到数据库
@@ -118,7 +123,7 @@ router.get(
   '/my',
   authenticateToken,
   requireStudent,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await pool.query(
         `SELECT * FROM artworks 
@@ -153,7 +158,7 @@ router.delete(
   '/:id',
   authenticateToken,
   requireStudent,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
 
@@ -164,7 +169,8 @@ router.delete(
       );
 
       if (checkResult.rows.length === 0) {
-        return res.status(404).json({ error: '作品不存在或无权删除' });
+        res.status(404).json({ error: '作品不存在或无权删除' });
+        return;
       }
 
       const filePath = checkResult.rows[0].file_path;

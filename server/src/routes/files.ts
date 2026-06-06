@@ -4,13 +4,14 @@ import { resolveUploadPath } from '../config/storage';
 const router = Router();
 
 // 提供文件访问（用于前端预览）
-router.get('/:filename', (req: Request, res: Response) => {
+router.get('/:filename', (req: Request, res: Response): void => {
   try {
     const { filename } = req.params;
     
     // 安全检查：确保文件名不包含路径遍历攻击
     if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
-      return res.status(400).json({ error: '无效的文件名' });
+      res.status(400).json({ error: '无效的文件名' });
+      return;
     }
 
     const filePath = resolveUploadPath(filename);

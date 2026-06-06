@@ -6,16 +6,18 @@ import { generateToken } from '../middleware/auth';
 const router: Router = Router();
 
 // 学生注册。兼容旧数据：旧学生账号没有密码时，允许用注册流程补设密码。
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, role, password } = req.body;
 
     if (!name || !role || !password) {
-      return res.status(400).json({ error: '请提供姓名、角色和密码' });
+      res.status(400).json({ error: '请提供姓名、角色和密码' });
+      return;
     }
 
     if (role !== 'student') {
-      return res.status(400).json({ error: '角色必须是 student' });
+      res.status(400).json({ error: '角色必须是 student' });
+      return;
     }
 
     const existingUser = await pool.query(
@@ -27,7 +29,8 @@ router.post('/register', async (req: Request, res: Response) => {
       const existing = existingUser.rows[0];
 
       if (existing.password) {
-        return res.status(409).json({ error: '该姓名已注册，请直接登录' });
+        res.status(409).json({ error: '该姓名已注册，请直接登录' });
+        return;
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -42,7 +45,7 @@ router.post('/register', async (req: Request, res: Response) => {
         role: existing.role
       });
 
-      return res.status(200).json({
+      res.status(200).json({
         message: '密码设置成功',
         user: {
           id: existing.id,
@@ -51,6 +54,7 @@ router.post('/register', async (req: Request, res: Response) => {
         },
         token
       });
+      return;
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -82,12 +86,13 @@ router.post('/register', async (req: Request, res: Response) => {
 });
 
 // 用户登录。学生和老师都必须使用密码。
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, role, password } = req.body;
 
     if (!name || !role || !password) {
-      return res.status(400).json({ error: '请提供姓名、角色和密码' });
+      res.status(400).json({ error: '请提供姓名、角色和密码' });
+      return;
     }
 
     const result = await pool.query(
@@ -96,18 +101,21 @@ router.post('/login', async (req: Request, res: Response) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: '用户不存在' });
+      res.status(401).json({ error: '用户不存在' });
+      return;
     }
 
     const user = result.rows[0];
 
     if (!user.password) {
-      return res.status(401).json({ error: '该账号还没有设置密码，请先注册设置密码' });
+      res.status(401).json({ error: '该账号还没有设置密码，请先注册设置密码' });
+      return;
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ error: '密码错误' });
+      res.status(401).json({ error: '密码错误' });
+      return;
     }
 
     const token = generateToken({

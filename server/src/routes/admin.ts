@@ -12,7 +12,7 @@ router.get(
   '/',
   authenticateToken,
   requireTeacher,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { type, search } = req.query;
 
@@ -65,7 +65,7 @@ router.get(
   '/:id/download',
   authenticateToken,
   requireTeacher,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
 
@@ -75,7 +75,8 @@ router.get(
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: '作品不存在' });
+        res.status(404).json({ error: '作品不存在' });
+        return;
       }
 
       const artwork = result.rows[0];
@@ -94,12 +95,13 @@ router.post(
   '/batch-download',
   authenticateToken,
   requireTeacher,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { artworkIds } = req.body;
 
       if (!artworkIds || !Array.isArray(artworkIds) || artworkIds.length === 0) {
-        return res.status(400).json({ error: '请选择要下载的作品' });
+        res.status(400).json({ error: '请选择要下载的作品' });
+        return;
       }
 
       // 获取作品信息
@@ -109,7 +111,8 @@ router.post(
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: '没有找到对应的作品' });
+        res.status(404).json({ error: '没有找到对应的作品' });
+        return;
       }
 
       const artworks = result.rows;
@@ -141,7 +144,7 @@ router.delete(
   '/:id',
   authenticateToken,
   requireTeacher,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
 
@@ -151,7 +154,8 @@ router.delete(
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: '作品不存在' });
+        res.status(404).json({ error: '作品不存在' });
+        return;
       }
 
       const filePath = resolveUploadPath(result.rows[0].file_path);
@@ -175,7 +179,7 @@ router.get(
   '/stats',
   authenticateToken,
   requireTeacher,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       // 获取作品总数
       const totalResult = await pool.query('SELECT COUNT(*) as total FROM artworks');
