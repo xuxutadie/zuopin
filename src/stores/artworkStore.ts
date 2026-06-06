@@ -28,6 +28,9 @@ interface ArtworkState {
   // 删除作品
   deleteArtwork: (id: string) => Promise<{ success: boolean; error?: string }>;
 
+  // 老师删除学生作品
+  deleteAdminArtwork: (id: string) => Promise<{ success: boolean; error?: string }>;
+
   // 获取所有作品（老师端）
   fetchAllArtworks: (options?: FilterOptions) => Promise<void>;
 
@@ -66,7 +69,8 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
           description: a.description,
           type: a.type,
           fileName: a.fileName,
-          fileData: artworkApi.getFileUrl(a.fileName),
+          fileData: artworkApi.getFileUrl(a.filePath),
+          thumbnail: a.type === 'image' ? artworkApi.getFileUrl(a.filePath) : undefined,
           fileSize: a.fileSize,
           mimeType: a.mimeType,
           createdAt: new Date(a.createdAt).getTime()
@@ -147,6 +151,23 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
     }
   },
 
+  deleteAdminArtwork: async (id) => {
+    try {
+      const result = await adminApi.deleteArtwork(id);
+
+      if (result.success) {
+        set(state => ({
+          artworks: state.artworks.filter(w => w.id !== id)
+        }));
+        return { success: true };
+      }
+
+      return { success: false, error: result.error };
+    } catch (error) {
+      return { success: false, error: '删除失败，请重试' };
+    }
+  },
+
   fetchAllArtworks: async (options) => {
     try {
       const result = await adminApi.getAllArtworks({
@@ -163,7 +184,8 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
           description: a.description,
           type: a.type,
           fileName: a.fileName,
-          fileData: artworkApi.getFileUrl(a.fileName),
+          fileData: artworkApi.getFileUrl(a.filePath),
+          thumbnail: a.type === 'image' ? artworkApi.getFileUrl(a.filePath) : undefined,
           fileSize: a.fileSize,
           mimeType: a.mimeType,
           createdAt: new Date(a.createdAt).getTime()

@@ -8,6 +8,7 @@ import { Input, Textarea } from '../components/Input';
 import { FileUpload } from '../components/FileUpload';
 import { useAuthStore } from '../stores/authStore';
 import { useArtworkStore } from '../stores/artworkStore';
+import { validateFileSize, validateFileType } from '../utils/fileHelper';
 import { ArrowLeft, FileImage, FileVideo, FileCode, CheckCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -22,7 +23,35 @@ export const SubmitWork: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [fileError, setFileError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  const handleFileSelect = (selectedFile: File) => {
+    setError('');
+    setFileError('');
+
+    if (!validateFileType(selectedFile, workType)) {
+      setFileError(
+        workType === 'html'
+          ? '网页作品仅支持 .html、.htm 或 ZIP 压缩包'
+          : '所选文件类型与当前作品类型不匹配'
+      );
+      return;
+    }
+
+    if (!validateFileSize(selectedFile, workType)) {
+      setFileError(
+        workType === 'image'
+          ? '图片大小不能超过 10MB'
+          : workType === 'video'
+            ? '视频大小不能超过 50MB'
+            : '网页作品文件大小不能超过 20MB'
+      );
+      return;
+    }
+
+    setFile(selectedFile);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,6 +179,8 @@ export const SubmitWork: React.FC = () => {
                         onClick={() => {
                           setWorkType(option.value);
                           setFile(null);
+                          setError('');
+                          setFileError('');
                         }}
                         className={clsx(
                           'p-4 rounded-lg border-2 transition-all',
@@ -187,10 +218,19 @@ export const SubmitWork: React.FC = () => {
                 <FileUpload
                   type={workType}
                   file={file}
-                  onFileSelect={setFile}
-                  onFileRemove={() => setFile(null)}
+                  onFileSelect={handleFileSelect}
+                  onFileRemove={() => {
+                    setFile(null);
+                    setFileError('');
+                  }}
+                  error={fileError}
                   variant="light"
                 />
+                {workType === 'html' && (
+                  <p className="mt-2 text-sm text-slate-600">
+                    可上传单个 `.html` / `.htm` 网页文件，或包含完整网页资源的 ZIP 压缩包。
+                  </p>
+                )}
               </div>
 
               {/* 作品名称 */}

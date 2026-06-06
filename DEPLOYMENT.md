@@ -156,6 +156,7 @@
 | TEACHER_PASSWORD | 老师账号密码 | `admin123` |
 | PORT | 服务端口 | `3000` |
 | FRONTEND_URL | 前端域名（CORS配置） | `https://app.zeabur.app` |
+| UPLOAD_DIR | 上传文件存储目录 | `/src/uploads` |
 
 #### 前端环境变量
 | 变量名 | 说明 | 示例 |

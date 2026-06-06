@@ -1,8 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import path from 'path';
 import { initializeDatabase } from './config/database';
+import { ensureUploadDir, getUploadDir } from './config/storage';
 import authRoutes from './routes/auth';
 import artworkRoutes from './routes/artworks';
 import adminRoutes from './routes/admin';
@@ -13,6 +13,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const uploadDir = ensureUploadDir();
 const allowedOrigins = [
   'https://zuopin.zeabur.app',
   'http://localhost:5173',
@@ -46,7 +47,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 静态文件服务
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(uploadDir));
 
 // 路由
 app.use('/api/auth', authRoutes);
@@ -74,7 +75,7 @@ async function startServer() {
 
     app.listen(PORT, () => {
       console.log(`🚀 服务器运行在 http://localhost:${PORT}`);
-      console.log(`📁 上传目录: ${path.join(__dirname, '../uploads')}`);
+      console.log(`📁 上传目录: ${getUploadDir()}`);
     });
   } catch (error) {
     console.error('❌ 启动服务器失败:', error);

@@ -1,29 +1,11 @@
 import { Router, Request, Response } from 'express';
-import path from 'path';
+import fs from 'fs';
 import archiver from 'archiver';
 import pool from '../config/database';
+import { resolveUploadPath } from '../config/storage';
 import { authenticateToken, requireTeacher } from '../middleware/auth';
 
-const router: Router = Router();
-
-function sanitizeFileName(name: string): string {
-  return name
-    .trim()
-    .replace(/[\\/:*?"<>|]/g, '_')
-    .replace(/\s+/g, ' ')
-    .slice(0, 80) || '未命名作品';
-}
-
-function getArtworkDownloadName(artwork: any): string {
-  const title = sanitizeFileName(artwork.title);
-  const extension = path.extname(artwork.file_name || artwork.file_path || '');
-
-  if (!extension || title.toLowerCase().endsWith(extension.toLowerCase())) {
-    return title;
-  }
-
-  return `${title}${extension}`;
-}
+const router = Router();
 
 // 获取所有作品列表
 router.get(
@@ -63,7 +45,8 @@ router.get(
         title: artwork.title,
         description: artwork.description,
         type: artwork.type,
-        fileName: artwork.file_path,
+        fileName: artwork.file_name,
+        filePath: artwork.file_path,
         fileSize: artwork.file_size,
         mimeType: artwork.mime_type,
         createdAt: artwork.created_at
@@ -96,9 +79,9 @@ router.get(
       }
 
       const artwork = result.rows[0];
-      const filePath = path.join(__dirname, '../../uploads', artwork.file_path);
+      const filePath = resolveUploadPath(artwork.file_path);
 
-      res.download(filePath, getArtworkDownloadName(artwork));
+      res.download(filePath, artwork.file_name);
     } catch (error) {
       console.error('下载作品错误:', error);
       res.status(500).json({ error: '服务器错误，请重试' });
@@ -141,13 +124,47 @@ router.post(
 
       // 添加文件到压缩包
       for (const artwork of artworks) {
-        const filePath = path.join(__dirname, '../../uploads', artwork.file_path);
-        archive.file(filePath, { name: `${artwork.student_name}/${getArtworkDownloadName(artwork)}` });
+        const filePath = resolveUploadPath(artwork.file_path);
+        archive.file(filePath, { name: `${artwork.student_name}/${artwork.file_name}` });
       }
 
       archive.finalize();
     } catch (error) {
       console.error('批量下载错误:', error);
+      res.status(500).json({ error: '服务器错误，请重试' });
+    }
+  }
+);
+
+// 老师删除作品
+router.delete(
+  '/:id',
+  authenticateToken,
+  requireTeacher,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const result = await pool.query(
+        'SELECT file_path FROM artworks WHERE id = $1',
+        [id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: '作品不存在' });
+      }
+
+      const filePath = resolveUploadPath(result.rows[0].file_path);
+
+      await pool.query('DELETE FROM artworks WHERE id = $1', [id]);
+
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      res.json({ message: '作品删除成功' });
+    } catch (error) {
+      console.error('老师删除作品错误:', error);
       res.status(500).json({ error: '服务器错误，请重试' });
     }
   }

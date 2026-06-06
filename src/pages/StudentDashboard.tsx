@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -10,7 +10,11 @@ import { FileImage, FileVideo, FileCode, Upload, FolderOpen } from 'lucide-react
 
 export const StudentDashboard: React.FC = () => {
   const { currentUser } = useAuthStore();
-  const { getStudentWorks } = useArtworkStore();
+  const { getStudentWorks, fetchMyWorks } = useArtworkStore();
+
+  useEffect(() => {
+    fetchMyWorks();
+  }, [fetchMyWorks]);
   
   const myWorks = currentUser ? getStudentWorks(currentUser.id) : [];
   

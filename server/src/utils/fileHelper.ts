@@ -4,7 +4,7 @@ import path from 'path';
 export const FILE_TYPE_MAP = {
   image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   video: ['video/mp4', 'video/webm'],
-  html: ['text/html', 'application/zip']
+  html: ['text/html', 'application/zip', 'application/x-zip-compressed']
 };
 
 // 文件大小限制（字节）
@@ -24,9 +24,11 @@ export const FILE_EXTENSIONS = {
 // 验证文件类型
 export function validateFileType(
   mimeType: string,
+  filename: string,
   type: 'image' | 'video' | 'html'
 ): boolean {
-  return FILE_TYPE_MAP[type].includes(mimeType);
+  const extension = getFileExtension(filename);
+  return FILE_TYPE_MAP[type].includes(mimeType) || FILE_EXTENSIONS[type].includes(extension);
 }
 
 // 验证文件大小

@@ -52,7 +52,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const acceptTypes = {
     image: 'image/jpeg,image/png,image/gif,image/webp',
     video: 'video/mp4,video/webm',
-    html: 'text/html,application/zip'
+    html: '.html,.htm,.zip,text/html,application/zip,application/x-zip-compressed'
   };
 
   const typeLabels = {
@@ -109,7 +109,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
               <p className={clsx('mt-1 text-sm', isLight ? 'text-slate-600' : 'text-slate-400')}>
                 {type === 'image' && '支持 JPG、PNG、GIF、WebP 格式，最大 10MB'}
                 {type === 'video' && '支持 MP4、WebM 格式，最大 50MB'}
-                {type === 'html' && '支持 HTML 或 ZIP 压缩包，最大 20MB'}
+                {type === 'html' && '支持 .html、.htm 或 ZIP 压缩包，最大 20MB'}
               </p>
             </div>
           </div>

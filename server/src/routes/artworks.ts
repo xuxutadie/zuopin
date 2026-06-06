@@ -1,8 +1,9 @@
-import { Router, Request, Response, RequestHandler } from 'express';
+import { Router, Request, Response } from 'express';
+import fs from 'fs';
 import multer from 'multer';
-import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../config/database';
+import { ensureUploadDir, resolveUploadPath } from '../config/storage';
 import { authenticateToken, requireStudent } from '../middleware/auth';
 import {
   validateFileType,
@@ -10,12 +11,13 @@ import {
   getFileExtension
 } from '../utils/fileHelper';
 
-const router: Router = Router();
+const router = Router();
+const uploadDir = ensureUploadDir();
 
 // 配置文件上传
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads'));
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueName = `${uuidv4()}${getFileExtension(file.originalname)}`;
@@ -30,13 +32,11 @@ const upload = multer({
 });
 
 // 提交作品
-const uploadSingleFile = upload.single('file') as unknown as RequestHandler;
-
 router.post(
   '/',
   authenticateToken,
   requireStudent,
-  uploadSingleFile,
+  upload.single('file'),
   async (req: Request, res: Response) => {
     try {
       if (!req.file) {
@@ -49,28 +49,24 @@ router.post(
       // 参数验证
       if (!title || !type) {
         // 删除已上传的文件
-        const fs = require('fs');
         fs.unlinkSync(file.path);
         return res.status(400).json({ error: '请提供作品名称和类型' });
       }
 
       // 验证作品类型
       if (!['image', 'video', 'html'].includes(type)) {
-        const fs = require('fs');
         fs.unlinkSync(file.path);
         return res.status(400).json({ error: '无效的作品类型' });
       }
 
       // 验证文件类型
-      if (!validateFileType(file.mimetype, type)) {
-        const fs = require('fs');
+      if (!validateFileType(file.mimetype, file.originalname, type)) {
         fs.unlinkSync(file.path);
         return res.status(400).json({ error: '文件类型不匹配' });
       }
 
       // 验证文件大小
       if (!validateFileSize(file.size, type)) {
-        const fs = require('fs');
         fs.unlinkSync(file.path);
         return res.status(400).json({ error: '文件大小超过限制' });
       }
@@ -100,12 +96,11 @@ router.post(
         message: '作品提交成功',
         artwork: {
           id: artwork.id,
-          studentId: artwork.student_id,
           studentName: artwork.student_name,
           title: artwork.title,
           description: artwork.description,
           type: artwork.type,
-          fileName: artwork.file_path,
+          fileName: artwork.file_name,
           fileSize: artwork.file_size,
           mimeType: artwork.mime_type,
           createdAt: artwork.created_at
@@ -134,12 +129,12 @@ router.get(
 
       const artworks = result.rows.map(artwork => ({
         id: artwork.id,
-        studentId: artwork.student_id,
         studentName: artwork.student_name,
         title: artwork.title,
         description: artwork.description,
         type: artwork.type,
-        fileName: artwork.file_path,
+        fileName: artwork.file_name,
+        filePath: artwork.file_path,
         fileSize: artwork.file_size,
         mimeType: artwork.mime_type,
         createdAt: artwork.created_at
@@ -178,8 +173,7 @@ router.delete(
       await pool.query('DELETE FROM artworks WHERE id = $1', [id]);
 
       // 删除文件
-      const fs = require('fs');
-      const fullPath = path.join(__dirname, '../../uploads', filePath);
+      const fullPath = resolveUploadPath(filePath);
       if (fs.existsSync(fullPath)) {
         fs.unlinkSync(fullPath);
       }

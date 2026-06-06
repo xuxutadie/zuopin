@@ -48,6 +48,8 @@ cd server && npm install
 cd server
 cp .env.example .env
 # 编辑.env文件，填写数据库连接信息
+# 如需把上传文件保存到 Zeabur 挂载磁盘，建议设置：
+# UPLOAD_DIR=/src/uploads
 ```
 
 4. **启动服务**

@@ -178,6 +178,13 @@ export const adminApi = {
     }>(`/admin/artworks${query ? `?${query}` : ''}`);
   },
 
+  // 老师删除作品
+  deleteArtwork: async (id: string) => {
+    return request(`/admin/artworks/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
   // 下载单个作品
   downloadArtwork: async (id: string) => {
     const token = getToken();

@@ -78,28 +78,14 @@ export function createPreviewUrl(artwork: Artwork): string {
 }
 
 // 打开HTML作品预览
-export async function previewHtmlWork(artwork: Artwork): Promise<void> {
+export function previewHtmlWork(artwork: Artwork): void {
   if (artwork.type !== 'html') return;
 
-  const response = await fetch(artwork.fileData);
-  const html = response.ok ? await response.text() : '';
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${artwork.title}</title>
-      </head>
-      <body>
-        ${html}
-      </body>
-    </html>
-  `;
+  const fileName = artwork.fileName.toLowerCase();
+  if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
+    window.open(artwork.fileData, '_blank', 'noopener,noreferrer');
+    return;
+  }
 
-  const blob = new Blob([htmlContent], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
-
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  alert('ZIP 网页作品请先下载后在本地解压预览。');
 }

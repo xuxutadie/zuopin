@@ -6,14 +6,13 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { ArtworkCard } from '../components/ArtworkCard';
 import { useArtworkStore } from '../stores/artworkStore';
-import { downloadMultipleFiles } from '../utils/downloadHelper';
 import { ArrowLeft, Search, Download, X, FileImage, FileVideo, FileCode } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Artwork, FilterOptions } from '../types';
 
 export const WorksOverview: React.FC = () => {
   const navigate = useNavigate();
-  const { filterArtworks, fetchAllArtworks } = useArtworkStore();
+  const { filterArtworks, fetchAllArtworks, batchDownload, deleteAdminArtwork } = useArtworkStore();
   
   const [filters, setFilters] = useState<FilterOptions>({});
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,13 +50,28 @@ export const WorksOverview: React.FC = () => {
     
     setIsDownloading(true);
     try {
-      const selectedArtworks = artworks.filter(a => selectedWorks.includes(a.id));
-      await downloadMultipleFiles(selectedArtworks);
+      const result = await batchDownload(selectedWorks);
+      if (!result.success) {
+        throw new Error(result.error || '下载失败');
+      }
     } catch (error) {
       alert('下载失败，请重试');
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const handleDelete = async (id: string) => {
+    const confirmed = window.confirm('确定要删除这件学生作品吗？删除后将无法恢复。');
+    if (!confirmed) return;
+
+    const result = await deleteAdminArtwork(id);
+    if (!result.success) {
+      alert(result.error || '删除失败，请重试');
+      return;
+    }
+
+    setSelectedWorks(prev => prev.filter(workId => workId !== id));
   };
 
   const typeFilters = [
@@ -182,6 +196,7 @@ export const WorksOverview: React.FC = () => {
                   key={artwork.id}
                   artwork={artwork}
                   showStudent
+                  onDelete={handleDelete}
                   selectable
                   selected={selectedWorks.includes(artwork.id)}
                   onSelect={handleToggleSelect}

@@ -4,7 +4,13 @@ import { Artwork } from '../types';
 const FILE_TYPE_MAP = {
   image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   video: ['video/mp4', 'video/webm'],
-  html: ['text/html', 'application/zip']
+  html: ['text/html', 'application/zip', 'application/x-zip-compressed']
+};
+
+const FILE_EXTENSIONS = {
+  image: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+  video: ['mp4', 'webm'],
+  html: ['html', 'htm', 'zip']
 };
 
 // 文件大小限制（字节）
@@ -16,7 +22,8 @@ const FILE_SIZE_LIMITS = {
 
 // 验证文件类型
 export function validateFileType(file: File, type: 'image' | 'video' | 'html'): boolean {
-  return FILE_TYPE_MAP[type].includes(file.type);
+  const extension = getFileExtension(file.name);
+  return FILE_TYPE_MAP[type].includes(file.type) || FILE_EXTENSIONS[type].includes(extension);
 }
 
 // 验证文件大小
