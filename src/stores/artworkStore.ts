@@ -23,7 +23,7 @@ interface ArtworkState {
     description: string,
     type: 'image' | 'video' | 'html',
     file: File
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; artwork?: Artwork }>;
 
   // 删除作品
   deleteArtwork: (id: string) => Promise<{ success: boolean; error?: string }>;
@@ -70,6 +70,7 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
           type: a.type,
           fileName: a.fileName,
           fileData: artworkApi.getFileUrl(a.filePath),
+          shareUrl: artworkApi.getHtmlShareUrl(a.filePath, a.fileName),
           thumbnail: a.type === 'image' ? artworkApi.getFileUrl(a.filePath) : undefined,
           fileSize: a.fileSize,
           mimeType: a.mimeType,
@@ -121,10 +122,28 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
 
       const result = await artworkApi.submit(formData);
       
-      if (result.success) {
+      if (result.success && result.data?.artwork) {
+        const artwork = {
+          id: result.data.artwork.id,
+          studentId: result.data.artwork.studentId,
+          studentName: result.data.artwork.studentName,
+          title: result.data.artwork.title,
+          description: result.data.artwork.description,
+          type: result.data.artwork.type,
+          fileName: result.data.artwork.fileName,
+          fileData: artworkApi.getFileUrl(result.data.artwork.filePath),
+          shareUrl: artworkApi.getHtmlShareUrl(result.data.artwork.filePath, result.data.artwork.fileName),
+          thumbnail: result.data.artwork.type === 'image'
+            ? artworkApi.getFileUrl(result.data.artwork.filePath)
+            : undefined,
+          fileSize: result.data.artwork.fileSize,
+          mimeType: result.data.artwork.mimeType,
+          createdAt: new Date(result.data.artwork.createdAt).getTime()
+        } satisfies Artwork;
+
         // 重新获取作品列表
         await get().fetchMyWorks();
-        return { success: true };
+        return { success: true, artwork };
       } else {
         return { success: false, error: result.error };
       }
@@ -185,6 +204,7 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
           type: a.type,
           fileName: a.fileName,
           fileData: artworkApi.getFileUrl(a.filePath),
+          shareUrl: artworkApi.getHtmlShareUrl(a.filePath, a.fileName),
           thumbnail: a.type === 'image' ? artworkApi.getFileUrl(a.filePath) : undefined,
           fileSize: a.fileSize,
           mimeType: a.mimeType,

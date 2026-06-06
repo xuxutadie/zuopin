@@ -9,7 +9,7 @@ import { FileUpload } from '../components/FileUpload';
 import { useAuthStore } from '../stores/authStore';
 import { useArtworkStore } from '../stores/artworkStore';
 import { validateFileSize, validateFileType } from '../utils/fileHelper';
-import { ArrowLeft, FileImage, FileVideo, FileCode, CheckCircle } from 'lucide-react';
+import { ArrowLeft, FileImage, FileVideo, FileCode, CheckCircle, Link2, ExternalLink } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export const SubmitWork: React.FC = () => {
@@ -25,6 +25,8 @@ export const SubmitWork: React.FC = () => {
   const [error, setError] = useState('');
   const [fileError, setFileError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const handleFileSelect = (selectedFile: File) => {
     setError('');
@@ -84,10 +86,11 @@ export const SubmitWork: React.FC = () => {
       );
       
       if (result.success) {
+        setShareUrl(result.artwork?.shareUrl || '');
         setSuccess(true);
         setTimeout(() => {
           navigate('/student/works');
-        }, 2000);
+        }, result.artwork?.shareUrl ? 5000 : 2000);
       } else {
         setError(result.error || '提交失败，请重试');
       }
@@ -128,6 +131,18 @@ export const SubmitWork: React.FC = () => {
   const lightInputClassName = '!border-slate-300 !bg-white !text-slate-900 placeholder:!text-slate-400';
   const lightLabelClassName = 'text-slate-700';
 
+  const handleCopyShareLink = async () => {
+    if (!shareUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      window.prompt('复制失败，请手动复制下方链接：', shareUrl);
+    }
+  };
+
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -137,7 +152,34 @@ export const SubmitWork: React.FC = () => {
               <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
             <h2 className="mb-2 text-2xl font-bold text-slate-900">提交成功！</h2>
-            <p className="mb-6 text-slate-600">你的作品已成功提交，正在跳转...</p>
+            <p className="mb-4 text-slate-600">你的作品已成功提交，正在跳转...</p>
+            {shareUrl && (
+              <div className="mb-6 rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-left">
+                <p className="text-sm font-semibold text-slate-900">已生成公开分享链接</p>
+                <p className="mt-2 break-all text-sm text-slate-600">{shareUrl}</p>
+                <div className="mt-3 flex space-x-3">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      void handleCopyShareLink();
+                    }}
+                    className="flex-1"
+                  >
+                    <Link2 className="w-4 h-4 mr-2" />
+                    {copied ? '已复制链接' : '复制链接'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => window.open(shareUrl, '_blank', 'noopener,noreferrer')}
+                    className="flex-1 border-slate-200 bg-white text-slate-800 hover:bg-slate-100"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    打开链接
+                  </Button>
+                </div>
+              </div>
+            )}
             <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
           </div>
         </Card>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Artwork } from '../types';
-import { FileImage, FileVideo, FileCode, Calendar, Download, Trash2, Eye, X } from 'lucide-react';
+import { FileImage, FileVideo, FileCode, Calendar, Download, Trash2, Eye, X, Link2, ExternalLink } from 'lucide-react';
 import { formatFileSize } from '../utils/fileHelper';
 import { downloadSingleFile, previewHtmlWork } from '../utils/downloadHelper';
 
@@ -24,6 +24,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
   onSelect
 }) => {
   const [showPreview, setShowPreview] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const typeIcons = {
     image: FileImage,
@@ -58,6 +59,20 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
   const handleDelete = () => {
     if (onDelete && confirm('确定要删除这个作品吗？')) {
       onDelete(artwork.id);
+    }
+  };
+
+  const canShareHtml = artwork.type === 'html' && !!artwork.shareUrl;
+
+  const handleCopyShareLink = async () => {
+    if (!artwork.shareUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(artwork.shareUrl);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2000);
+    } catch (error) {
+      window.prompt('复制失败，请手动复制下方链接：', artwork.shareUrl);
     }
   };
 
@@ -140,6 +155,13 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
             </p>
           )}
 
+          {canShareHtml && (
+            <div className="mb-3 rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-2">
+              <p className="text-xs font-medium text-cyan-200">公开分享链接</p>
+              <p className="mt-1 truncate text-xs text-slate-300">{artwork.shareUrl}</p>
+            </div>
+          )}
+
           <div className="flex items-center justify-between text-xs text-slate-400">
             <div className="flex items-center space-x-1">
               <Calendar className="w-3 h-3" />
@@ -150,38 +172,66 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
 
           {/* 操作按钮 */}
           {showActions && (
-            <div className="mt-4 flex items-center space-x-2 border-t border-white/10 pt-3">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePreview();
-                }}
-                className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-blue-300 transition-colors hover:bg-blue-500/10"
-              >
-                <Eye className="w-4 h-4" />
-                <span>预览</span>
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDownload();
-                }}
-                className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-green-300 transition-colors hover:bg-green-500/10"
-              >
-                <Download className="w-4 h-4" />
-                <span>下载</span>
-              </button>
-              {onDelete && (
+            <div className="mt-4 border-t border-white/10 pt-3">
+              <div className="flex items-center space-x-2">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDelete();
+                    handlePreview();
                   }}
-                  className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-red-300 transition-colors hover:bg-red-500/10"
+                  className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-blue-300 transition-colors hover:bg-blue-500/10"
                 >
-                  <Trash2 className="w-4 h-4" />
-                  <span>删除</span>
+                  <Eye className="w-4 h-4" />
+                  <span>预览</span>
                 </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownload();
+                  }}
+                  className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-green-300 transition-colors hover:bg-green-500/10"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>下载</span>
+                </button>
+                {onDelete && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete();
+                    }}
+                    className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-red-300 transition-colors hover:bg-red-500/10"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>删除</span>
+                  </button>
+                )}
+              </div>
+              {canShareHtml && (
+                <div className="mt-2 flex items-center space-x-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void handleCopyShareLink();
+                    }}
+                    className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-cyan-300 transition-colors hover:bg-cyan-500/10"
+                  >
+                    <Link2 className="w-4 h-4" />
+                    <span>{linkCopied ? '已复制' : '复制链接'}</span>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (artwork.shareUrl) {
+                        window.open(artwork.shareUrl, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
+                    className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-indigo-300 transition-colors hover:bg-indigo-500/10"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>打开链接</span>
+                  </button>
+                </div>
               )}
             </div>
           )}

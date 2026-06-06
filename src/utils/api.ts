@@ -2,6 +2,21 @@
 const LOCAL_DEV_API_URL = 'https://zuopin-api.zeabur.app/api';
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? LOCAL_DEV_API_URL : '/api');
 
+function getApiEndpointBase(): string {
+  if (API_BASE_URL.startsWith('http://') || API_BASE_URL.startsWith('https://')) {
+    return API_BASE_URL;
+  }
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  return `${origin}${API_BASE_URL}`;
+}
+
+function joinApiPath(base: string, path: string): string {
+  const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}`;
+}
+
 // 获取存储的Token
 function getToken(): string | null {
   return localStorage.getItem('artwork_token');
@@ -160,7 +175,22 @@ export const artworkApi = {
 
   // 获取文件URL
   getFileUrl: (filename: string) => {
-    return `${API_BASE_URL}/files/${filename}`;
+    return joinApiPath(API_BASE_URL, `/files/${filename}`);
+  },
+
+  // 获取公开可访问的文件URL
+  getPublicFileUrl: (filename: string) => {
+    return joinApiPath(getApiEndpointBase(), `/files/${filename}`);
+  },
+
+  // 获取单个 HTML 文件的分享链接
+  getHtmlShareUrl: (storedFilename: string, originalFileName: string) => {
+    const normalizedName = originalFileName.toLowerCase();
+    if (!normalizedName.endsWith('.html') && !normalizedName.endsWith('.htm')) {
+      return undefined;
+    }
+
+    return joinApiPath(getApiEndpointBase(), `/files/${storedFilename}`);
   }
 };
 

@@ -20,6 +20,7 @@ export interface Artwork {
   mimeType: string;
   createdAt: number;
   thumbnail?: string;
+  shareUrl?: string;
 }
 
 // 表单数据类型
