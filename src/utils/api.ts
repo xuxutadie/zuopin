@@ -32,6 +32,29 @@ export function clearToken(): void {
   localStorage.removeItem('artwork_token');
 }
 
+function clearStoredSession(): void {
+  clearToken();
+  localStorage.removeItem('artwork_user');
+}
+
+function isAuthExpired(response: Response, data: any): boolean {
+  return response.status === 401
+    || response.status === 403
+    || data?.error === 'Token无效或已过期';
+}
+
+function handleAuthExpired(response: Response, data: any): void {
+  if (!isAuthExpired(response, data)) {
+    return;
+  }
+
+  clearStoredSession();
+
+  if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    window.location.href = '/login?reason=expired';
+  }
+}
+
 // API响应类型
 interface ApiResponse<T = any> {
   success: boolean;
@@ -78,9 +101,12 @@ async function request<T>(
     const data = await readResponseData(response);
 
     if (!response.ok) {
+      handleAuthExpired(response, data);
       return {
         success: false,
-        error: data?.error || `请求失败（${response.status}）`
+        error: isAuthExpired(response, data)
+          ? '登录已失效，请重新登录'
+          : data?.error || `请求失败（${response.status}）`
       };
     }
 
@@ -140,9 +166,12 @@ export const artworkApi = {
       const data = await readResponseData(response);
 
       if (!response.ok) {
+        handleAuthExpired(response, data);
         return {
           success: false,
-          error: data?.error || `提交失败（${response.status}）`
+          error: isAuthExpired(response, data)
+            ? '登录已失效，请重新登录'
+            : data?.error || `提交失败（${response.status}）`
         };
       }
 
@@ -237,9 +266,12 @@ export const adminApi = {
 
       if (!response.ok) {
         const data = await readResponseData(response);
+        handleAuthExpired(response, data);
         return {
           success: false,
-          error: data?.error || `下载失败（${response.status}）`
+          error: isAuthExpired(response, data)
+            ? '登录已失效，请重新登录'
+            : data?.error || `下载失败（${response.status}）`
         };
       }
 
