@@ -290,6 +290,16 @@ export const adminApi = {
     });
   },
 
+  // 老师设置作品是否展示在作品广场
+  updateArtworkPublic: async (id: string, isPublic: boolean) => {
+    return request<{
+      artwork: ArtworkApiItem;
+    }>(`/admin/artworks/${id}/public`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isPublic })
+    });
+  },
+
   // 下载单个作品
   downloadArtwork: async (id: string) => {
     const token = getToken();

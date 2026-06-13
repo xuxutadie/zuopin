@@ -15,22 +15,24 @@ router.get(
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { type, search } = req.query;
+      const typeValue = typeof type === 'string' ? type : '';
+      const searchValue = typeof search === 'string' ? search.trim() : '';
 
       let query = 'SELECT * FROM artworks WHERE 1=1';
-      const params: any[] = [];
+      const params: string[] = [];
       let paramIndex = 1;
 
       // 按类型筛选
-      if (type && ['image', 'video', 'html'].includes(type as string)) {
+      if (['image', 'video', 'html'].includes(typeValue)) {
         query += ` AND type = $${paramIndex}`;
-        params.push(type);
+        params.push(typeValue);
         paramIndex++;
       }
 
       // 按关键词搜索
-      if (search) {
+      if (searchValue) {
         query += ` AND (title ILIKE $${paramIndex} OR student_name ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
-        params.push(`%${search}%`);
+        params.push(`%${searchValue}%`);
         paramIndex++;
       }
 
@@ -136,6 +138,60 @@ router.post(
       archive.finalize();
     } catch (error) {
       console.error('批量下载错误:', error);
+      res.status(500).json({ error: '服务器错误，请重试' });
+    }
+  }
+);
+
+// 老师设置作品是否展示在作品广场
+router.patch(
+  '/:id/public',
+  authenticateToken,
+  requireTeacher,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const { isPublic } = req.body;
+
+      if (typeof isPublic !== 'boolean') {
+        res.status(400).json({ error: '请提供正确的公开状态' });
+        return;
+      }
+
+      const result = await pool.query(
+        `UPDATE artworks
+         SET is_public = $1
+         WHERE id = $2
+         RETURNING *`,
+        [isPublic, id]
+      );
+
+      if (result.rows.length === 0) {
+        res.status(404).json({ error: '作品不存在' });
+        return;
+      }
+
+      const artwork = result.rows[0];
+      res.json({
+        message: isPublic ? '作品已推送到作品广场' : '作品已从作品广场取消展示',
+        artwork: {
+          id: artwork.id,
+          studentId: artwork.student_id,
+          studentName: artwork.student_name,
+          title: artwork.title,
+          description: artwork.description,
+          type: artwork.type,
+          fileName: artwork.file_name,
+          filePath: artwork.file_path,
+          fileSize: artwork.file_size,
+          mimeType: artwork.mime_type,
+          thumbnailPath: artwork.thumbnail_path,
+          isPublic: !!artwork.is_public,
+          createdAt: artwork.created_at
+        }
+      });
+    } catch (error) {
+      console.error('设置作品公开状态错误:', error);
       res.status(500).json({ error: '服务器错误，请重试' });
     }
   }

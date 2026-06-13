@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Artwork } from '../types';
-import { FileImage, FileVideo, FileCode, Calendar, Download, Trash2, Eye, X, Link2, ExternalLink } from 'lucide-react';
+import { FileImage, FileVideo, FileCode, Calendar, Download, Trash2, Eye, X, Link2, ExternalLink, Globe2 } from 'lucide-react';
 import { formatFileSize } from '../utils/fileHelper';
 import { downloadSingleFile, previewHtmlWork } from '../utils/downloadHelper';
 
@@ -12,6 +12,9 @@ interface ArtworkCardProps {
   selectable?: boolean;
   selected?: boolean;
   onSelect?: (artwork: Artwork) => void;
+  showPublicToggle?: boolean;
+  onTogglePublic?: (artwork: Artwork) => void;
+  isPublicUpdating?: boolean;
 }
 
 // 根据作品类型返回渐变色（用于没有缩略图时的占位背景）
@@ -60,7 +63,11 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
   showActions = true,
   onDelete,
   selectable = false,
-  selected = false
+  selected = false,
+  onSelect,
+  showPublicToggle = false,
+  onTogglePublic,
+  isPublicUpdating = false
 }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -106,6 +113,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
 
   // 是否展示缩略图图片
   const hasThumbnail = !!artwork.thumbnail && !imageError;
+  const canTogglePublic = showPublicToggle && !!onTogglePublic;
 
   return (
     <>
@@ -114,7 +122,13 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
         transition-all duration-300 hover:-translate-y-1 hover:border-blue-400/40 hover:shadow-xl hover:shadow-blue-950/30
         ${selectable ? 'cursor-pointer' : ''}
         ${selected ? 'ring-2 ring-blue-500' : ''}
-      `}>
+      `}
+        onClick={() => {
+          if (selectable && onSelect) {
+            onSelect(artwork);
+          }
+        }}
+      >
         {/* 预览区域：统一使用缩略图 */}
         <div
           className="relative h-48 cursor-pointer overflow-hidden"
@@ -133,12 +147,35 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
           {/* 渐变遮罩 + 图标 */}
           {!hasThumbnail && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-              <Icon className="w-16 h-16 opacity-70 mb-2" />
-              <p className="text-sm opacity-80">
-                {artwork.type === 'html' ? '点击预览 HTML 作品' :
-                 artwork.type === 'video' ? '点击播放视频' :
-                 '点击查看大图'}
-              </p>
+              {artwork.type === 'html' ? (
+                <div className="w-4/5 max-w-[220px] overflow-hidden rounded-xl border border-white/20 bg-slate-950/80 shadow-2xl">
+                  <div className="flex items-center gap-1 border-b border-white/10 bg-white/10 px-3 py-2">
+                    <span className="h-2 w-2 rounded-full bg-red-400" />
+                    <span className="h-2 w-2 rounded-full bg-yellow-400" />
+                    <span className="h-2 w-2 rounded-full bg-green-400" />
+                  </div>
+                  <div className="space-y-2 p-4">
+                    <div className="h-3 w-2/3 rounded bg-blue-300/70" />
+                    <div className="h-2 w-full rounded bg-white/30" />
+                    <div className="h-2 w-5/6 rounded bg-white/20" />
+                    <div className="mt-3 grid grid-cols-3 gap-2">
+                      <div className="h-8 rounded bg-purple-300/40" />
+                      <div className="h-8 rounded bg-cyan-300/40" />
+                      <div className="h-8 rounded bg-pink-300/40" />
+                    </div>
+                  </div>
+                  <div className="border-t border-white/10 px-3 py-2 text-center text-xs text-blue-100">
+                    点击预览 HTML 作品
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Icon className="w-16 h-16 opacity-70 mb-2" />
+                  <p className="text-sm opacity-80">
+                    {artwork.type === 'video' ? '点击播放视频' : '点击查看大图'}
+                  </p>
+                </>
+              )}
             </div>
           )}
 
@@ -150,7 +187,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
 
           {/* 公开标签 */}
           {artwork.isPublic && (
-            <div className="absolute right-2 top-2 flex items-center space-x-1 rounded-lg border border-cyan-400/30 bg-cyan-500/20 px-2 py-1 backdrop-blur-sm text-cyan-100">
+            <div className={`absolute top-2 flex items-center space-x-1 rounded-lg border border-cyan-400/30 bg-cyan-500/20 px-2 py-1 backdrop-blur-sm text-cyan-100 ${selectable ? 'right-10' : 'right-2'}`}>
               <Link2 className="w-3 h-3" />
               <span className="text-xs font-medium">已公开</span>
             </div>
@@ -213,6 +250,29 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
           {/* 操作按钮 */}
           {showActions && (
             <div className="mt-4 border-t border-white/10 pt-3">
+              {canTogglePublic && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTogglePublic(artwork);
+                  }}
+                  disabled={isPublicUpdating}
+                  className={`mb-2 flex w-full items-center justify-center space-x-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                    artwork.isPublic
+                      ? 'border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/20'
+                      : 'border border-amber-500/30 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20'
+                  }`}
+                >
+                  <Globe2 className="w-4 h-4" />
+                  <span>
+                    {isPublicUpdating
+                      ? '更新中...'
+                      : artwork.isPublic
+                        ? '取消广场展示'
+                        : '推送到作品广场'}
+                  </span>
+                </button>
+              )}
               <div className="flex items-center space-x-2">
                 <button
                   onClick={(e) => {

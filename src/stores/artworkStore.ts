@@ -36,6 +36,9 @@ interface ArtworkState {
   // 老师删除学生作品
   deleteAdminArtwork: (id: string) => Promise<{ success: boolean; error?: string }>;
 
+  // 老师设置作品是否展示在作品广场
+  toggleArtworkPublic: (id: string, isPublic: boolean) => Promise<{ success: boolean; error?: string }>;
+
   // 获取所有作品（老师端）
   fetchAllArtworks: (options?: FilterOptions) => Promise<void>;
 
@@ -213,6 +216,38 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
       return { success: false, error: result.error };
     } catch {
       return { success: false, error: '删除失败，请重试' };
+    }
+  },
+
+  toggleArtworkPublic: async (id, isPublic) => {
+    try {
+      const result = await adminApi.updateArtworkPublic(id, isPublic);
+
+      if (!result.success || !result.data?.artwork) {
+        return { success: false, error: result.error || '更新展示状态失败' };
+      }
+
+      const updatedArtwork = mapArtwork(result.data.artwork);
+
+      set(state => {
+        const updateItem = (artwork: Artwork) =>
+          artwork.id === id ? updatedArtwork : artwork;
+
+        return {
+          artworks: state.artworks.map(updateItem),
+          myWorks: state.myWorks.map(updateItem),
+          publicWorks: updatedArtwork.isPublic
+            ? [
+                updatedArtwork,
+                ...state.publicWorks.filter(artwork => artwork.id !== id)
+              ]
+            : state.publicWorks.filter(artwork => artwork.id !== id)
+        };
+      });
+
+      return { success: true };
+    } catch {
+      return { success: false, error: '更新展示状态失败，请重试' };
     }
   },
 

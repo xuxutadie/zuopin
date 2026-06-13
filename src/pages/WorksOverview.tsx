@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { Button } from '../components/Button';
-import { Input } from '../components/Input';
 import { ArtworkCard } from '../components/ArtworkCard';
 import { useArtworkStore } from '../stores/artworkStore';
 import { ArrowLeft, Search, Download, X, FileImage, FileVideo, FileCode } from 'lucide-react';
@@ -12,12 +11,19 @@ import { Artwork, FilterOptions } from '../types';
 
 export const WorksOverview: React.FC = () => {
   const navigate = useNavigate();
-  const { filterArtworks, fetchAllArtworks, batchDownload, deleteAdminArtwork } = useArtworkStore();
+  const {
+    filterArtworks,
+    fetchAllArtworks,
+    batchDownload,
+    deleteAdminArtwork,
+    toggleArtworkPublic
+  } = useArtworkStore();
   
   const [filters, setFilters] = useState<FilterOptions>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedWorks, setSelectedWorks] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [publicUpdatingId, setPublicUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAllArtworks();
@@ -54,7 +60,7 @@ export const WorksOverview: React.FC = () => {
       if (!result.success) {
         throw new Error(result.error || '下载失败');
       }
-    } catch (error) {
+    } catch {
       alert('下载失败，请重试');
     } finally {
       setIsDownloading(false);
@@ -72,6 +78,24 @@ export const WorksOverview: React.FC = () => {
     }
 
     setSelectedWorks(prev => prev.filter(workId => workId !== id));
+  };
+
+  const handleTogglePublic = async (artwork: Artwork) => {
+    const nextPublic = !artwork.isPublic;
+    const confirmed = window.confirm(
+      nextPublic
+        ? '确定将这个作品推送到作品广场吗？公开后所有访问者都可以浏览。'
+        : '确定将这个作品从作品广场取消展示吗？'
+    );
+    if (!confirmed) return;
+
+    setPublicUpdatingId(artwork.id);
+    const result = await toggleArtworkPublic(artwork.id, nextPublic);
+    setPublicUpdatingId(null);
+
+    if (!result.success) {
+      alert(result.error || '更新展示状态失败，请重试');
+    }
   };
 
   const typeFilters = [
@@ -200,6 +224,9 @@ export const WorksOverview: React.FC = () => {
                   selectable
                   selected={selectedWorks.includes(artwork.id)}
                   onSelect={handleToggleSelect}
+                  showPublicToggle
+                  onTogglePublic={handleTogglePublic}
+                  isPublicUpdating={publicUpdatingId === artwork.id}
                 />
               ))}
             </div>
