@@ -10,6 +10,7 @@ import { SubmitWork } from "./pages/SubmitWork";
 import { MyWorks } from "./pages/MyWorks";
 import { TeacherDashboard } from "./pages/TeacherDashboard";
 import { WorksOverview } from "./pages/WorksOverview";
+import { Gallery } from "./pages/Gallery";
 
 function ProtectedRoute({
   children,
@@ -51,6 +52,7 @@ function App() {
         <div className="relative z-10">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/gallery" element={<Gallery />} />
             <Route path="/login" element={<Login />} />
 
             <Route

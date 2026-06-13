@@ -14,36 +14,64 @@ interface ArtworkCardProps {
   onSelect?: (artwork: Artwork) => void;
 }
 
+// 根据作品类型返回渐变色（用于没有缩略图时的占位背景）
+function getPlaceholderGradient(type: string): string {
+  switch (type) {
+    case 'html':
+      return 'linear-gradient(135deg, #1e3a8a 0%, #6d28d9 50%, #312e81 100%)';
+    case 'video':
+      return 'linear-gradient(135deg, #14532d 0%, #15803d 50%, #064e3b 100%)';
+    case 'image':
+      return 'linear-gradient(135deg, #7c2d12 0%, #b91c1c 50%, #7f1d1d 100%)';
+    default:
+      return 'linear-gradient(135deg, #1f2937 0%, #374151 100%)';
+  }
+}
+
+// 根据作品类型返回图标
+function getTypeIcon(type: string) {
+  switch (type) {
+    case 'image':
+      return FileImage;
+    case 'video':
+      return FileVideo;
+    case 'html':
+    default:
+      return FileCode;
+  }
+}
+
+function getTypeLabel(type: string): string {
+  switch (type) {
+    case 'image':
+      return '图片';
+    case 'video':
+      return '视频';
+    case 'html':
+      return 'HTML';
+    default:
+      return type;
+  }
+}
+
 export const ArtworkCard: React.FC<ArtworkCardProps> = ({
   artwork,
   showStudent = false,
   showActions = true,
   onDelete,
   selectable = false,
-  selected = false,
-  onSelect
+  selected = false
 }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
-  const typeIcons = {
-    image: FileImage,
-    video: FileVideo,
-    html: FileCode
-  };
-
-  const typeLabels = {
-    image: '图片',
-    video: '视频',
-    html: 'HTML'
-  };
-
-  const Icon = typeIcons[artwork.type];
+  const Icon = getTypeIcon(artwork.type);
 
   const handleDownload = async () => {
     try {
       await downloadSingleFile(artwork);
-    } catch (error) {
+    } catch {
       alert('下载失败，请重试');
     }
   };
@@ -71,10 +99,13 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
       await navigator.clipboard.writeText(artwork.shareUrl);
       setLinkCopied(true);
       window.setTimeout(() => setLinkCopied(false), 2000);
-    } catch (error) {
+    } catch {
       window.prompt('复制失败，请手动复制下方链接：', artwork.shareUrl);
     }
   };
+
+  // 是否展示缩略图图片
+  const hasThumbnail = !!artwork.thumbnail && !imageError;
 
   return (
     <>
@@ -84,49 +115,53 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
         ${selectable ? 'cursor-pointer' : ''}
         ${selected ? 'ring-2 ring-blue-500' : ''}
       `}>
-        {/* 预览区域 */}
-        <div 
-          className="relative h-48 cursor-pointer bg-slate-900"
+        {/* 预览区域：统一使用缩略图 */}
+        <div
+          className="relative h-48 cursor-pointer overflow-hidden"
+          style={{ background: hasThumbnail ? '#0f172a' : getPlaceholderGradient(artwork.type) }}
           onClick={handlePreview}
         >
-          {artwork.type === 'image' && (
+          {hasThumbnail && (
             <img
-              src={artwork.thumbnail || artwork.fileData}
+              src={artwork.thumbnail}
               alt={artwork.title}
+              onError={() => setImageError(true)}
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           )}
-          {artwork.type === 'video' && (
-            <video
-              src={artwork.fileData}
-              className="w-full h-full object-cover"
-            />
-          )}
-          {artwork.type === 'html' && (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-900 to-purple-950">
-              <div className="text-center">
-                <FileCode className="w-12 h-12 text-blue-600 mx-auto mb-2" />
-                <p className="text-sm text-slate-200">HTML作品</p>
-                <p className="text-xs text-slate-400">点击预览</p>
-              </div>
+          {/* 渐变遮罩 + 图标 */}
+          {!hasThumbnail && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+              <Icon className="w-16 h-16 opacity-70 mb-2" />
+              <p className="text-sm opacity-80">
+                {artwork.type === 'html' ? '点击预览 HTML 作品' :
+                 artwork.type === 'video' ? '点击播放视频' :
+                 '点击查看大图'}
+              </p>
             </div>
           )}
 
           {/* 类型标签 */}
-          <div className="absolute left-2 top-2 flex items-center space-x-1 rounded-lg border border-white/10 bg-black/70 px-2 py-1 backdrop-blur-sm">
-            <Icon className="w-4 h-4 text-blue-600" />
-            <span className="text-xs font-medium text-slate-100">{typeLabels[artwork.type]}</span>
+          <div className="absolute left-2 top-2 flex items-center space-x-1 rounded-lg border border-white/10 bg-black/70 px-2 py-1 backdrop-blur-sm text-white">
+            <Icon className="w-4 h-4" />
+            <span className="text-xs font-medium">{getTypeLabel(artwork.type)}</span>
           </div>
+
+          {/* 公开标签 */}
+          {artwork.isPublic && (
+            <div className="absolute right-2 top-2 flex items-center space-x-1 rounded-lg border border-cyan-400/30 bg-cyan-500/20 px-2 py-1 backdrop-blur-sm text-cyan-100">
+              <Link2 className="w-3 h-3" />
+              <span className="text-xs font-medium">已公开</span>
+            </div>
+          )}
 
           {/* 选中标记 */}
           {selectable && (
             <div className={`
               absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center
-              transition-all
-              ${selected 
-                ? 'bg-blue-600 border-blue-600' 
-                : 'border-slate-500 bg-black/70'
-              }
+              transition-all bg-black/70
+              ${selected ? 'bg-blue-600 border-blue-600' : 'border-slate-500'}
             `}>
               {selected && (
                 <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -134,6 +169,11 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
                 </svg>
               )}
             </div>
+          )}
+
+          {/* 底部渐变遮罩，让标题可读 */}
+          {hasThumbnail && (
+            <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
           )}
         </div>
 
@@ -145,7 +185,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
           
           {showStudent && (
             <p className="mb-2 text-sm text-slate-300">
-              学生：{artwork.studentName}
+              作者：{artwork.studentName}
             </p>
           )}
           
@@ -240,12 +280,12 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
 
       {/* 预览模态框 */}
       {showPreview && artwork.type !== 'html' && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
           onClick={() => setShowPreview(false)}
         >
-          <div 
-            className="relative max-w-6xl max-h-full"
+          <div
+            className="relative max-w-5xl max-h-full"
             onClick={(e) => e.stopPropagation()}
           >
             <button

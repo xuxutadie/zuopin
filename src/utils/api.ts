@@ -37,13 +37,22 @@ function clearStoredSession(): void {
   localStorage.removeItem('artwork_user');
 }
 
-function isAuthExpired(response: Response, data: any): boolean {
-  return response.status === 401
-    || response.status === 403
-    || data?.error === 'Token无效或已过期';
+function getResponseError(data: unknown): string | undefined {
+  if (!data || typeof data !== 'object' || !('error' in data)) {
+    return undefined;
+  }
+
+  const error = (data as { error?: unknown }).error;
+  return typeof error === 'string' ? error : undefined;
 }
 
-function handleAuthExpired(response: Response, data: any): void {
+function isAuthExpired(response: Response, data: unknown): boolean {
+  return response.status === 401
+    || response.status === 403
+    || getResponseError(data) === 'Token无效或已过期';
+}
+
+function handleAuthExpired(response: Response, data: unknown): void {
   if (!isAuthExpired(response, data)) {
     return;
   }
@@ -56,13 +65,38 @@ function handleAuthExpired(response: Response, data: any): void {
 }
 
 // API响应类型
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
 }
 
-async function readResponseData(response: Response): Promise<any> {
+export interface ArtworkApiItem {
+  id: string;
+  studentId?: string;
+  student_id?: string;
+  studentName?: string;
+  student_name?: string;
+  title: string;
+  description?: string | null;
+  type: 'image' | 'video' | 'html';
+  fileName?: string;
+  file_name?: string;
+  filePath?: string;
+  file_path?: string;
+  thumbnailPath?: string | null;
+  thumbnail_path?: string | null;
+  isPublic?: boolean;
+  is_public?: boolean;
+  fileSize?: number;
+  file_size?: number;
+  mimeType?: string;
+  mime_type?: string;
+  createdAt?: string | number;
+  created_at?: string | number;
+}
+
+async function readResponseData(response: Response): Promise<unknown> {
   const text = await response.text();
 
   if (!text) {
@@ -82,14 +116,14 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
   const token = getToken();
-  
-  const headers: HeadersInit = {
-    ...(!(options.body instanceof FormData) && { 'Content-Type': 'application/json' }),
-    ...options.headers
-  };
+  const headers = new Headers(options.headers);
+
+  if (!(options.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
+  }
 
   if (token) {
-    (headers as any)['Authorization'] = `Bearer ${token}`;
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   try {
@@ -103,16 +137,16 @@ async function request<T>(
     if (!response.ok) {
       handleAuthExpired(response, data);
       return {
-        success: false,
-        error: isAuthExpired(response, data)
-          ? '登录已失效，请重新登录'
-          : data?.error || `请求失败（${response.status}）`
+          success: false,
+          error: isAuthExpired(response, data)
+            ? '登录已失效，请重新登录'
+            : getResponseError(data) || `请求失败（${response.status}）`
       };
     }
 
     return {
       success: true,
-      data
+      data: data as T
     };
   } catch (error) {
     console.error('API请求错误:', error);
@@ -150,8 +184,8 @@ export const authApi = {
 
 // 作品API
 export const artworkApi = {
-  // 提交作品
-  submit: async (formData: FormData): Promise<ApiResponse> => {
+  // 提交作品（支持可选 thumbnail 封面图 和 is_public 公开开关）
+  submit: async (formData: FormData): Promise<ApiResponse<{ artwork: ArtworkApiItem }>> => {
     const token = getToken();
     
     try {
@@ -171,13 +205,13 @@ export const artworkApi = {
           success: false,
           error: isAuthExpired(response, data)
             ? '登录已失效，请重新登录'
-            : data?.error || `提交失败（${response.status}）`
+            : getResponseError(data) || `提交失败（${response.status}）`
         };
       }
 
       return {
         success: true,
-        data
+        data: data as { artwork: ArtworkApiItem }
       };
     } catch (error) {
       console.error('提交作品错误:', error);
@@ -191,8 +225,20 @@ export const artworkApi = {
   // 获取我的作品列表
   getMyWorks: async () => {
     return request<{
-      artworks: any[];
+      artworks: ArtworkApiItem[];
     }>('/artworks/my');
+  },
+
+  // 获取公开作品广场列表（无需登录）
+  getPublicWorks: async (params?: { type?: string; search?: string }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.type) searchParams.set('type', params.type);
+    if (params?.search) searchParams.set('search', params.search);
+
+    const query = searchParams.toString();
+    return request<{
+      artworks: ArtworkApiItem[];
+    }>(`/artworks/public${query ? `?${query}` : ''}`);
   },
 
   // 删除作品
@@ -233,7 +279,7 @@ export const adminApi = {
     
     const query = searchParams.toString();
     return request<{
-      artworks: any[];
+      artworks: ArtworkApiItem[];
     }>(`/admin/artworks${query ? `?${query}` : ''}`);
   },
 
@@ -271,7 +317,7 @@ export const adminApi = {
           success: false,
           error: isAuthExpired(response, data)
             ? '登录已失效，请重新登录'
-            : data?.error || `下载失败（${response.status}）`
+            : getResponseError(data) || `下载失败（${response.status}）`
         };
       }
 

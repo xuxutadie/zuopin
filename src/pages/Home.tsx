@@ -4,7 +4,7 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { Button } from '../components/Button';
 import { Card, CardTitle, CardContent } from '../components/Card';
-import { FileImage, FileVideo, FileCode, Sparkles, Users, Download } from 'lucide-react';
+import { FileImage, FileVideo, FileCode, Sparkles, Users, Download, GalleryHorizontalEnd } from 'lucide-react';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -33,10 +33,11 @@ export const Home: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
               <Button
                 size="lg"
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/gallery')}
                 className="w-full sm:w-auto"
               >
-                立即开始
+                <GalleryHorizontalEnd className="w-5 h-5 mr-2" />
+                浏览作品广场
               </Button>
               <Button
                 variant="secondary"
@@ -44,7 +45,7 @@ export const Home: React.FC = () => {
                 onClick={() => navigate('/login')}
                 className="w-full sm:w-auto"
               >
-                老师登录
+                登录 / 提交作品
               </Button>
             </div>
           </div>

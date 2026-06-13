@@ -14,7 +14,23 @@ import {
 const router = Router();
 const uploadDir = ensureUploadDir();
 
-// 配置文件上传
+interface ArtworkRow {
+  id: string;
+  student_id: string;
+  student_name: string;
+  title: string;
+  description: string | null;
+  type: 'image' | 'video' | 'html';
+  file_name: string;
+  file_path: string;
+  file_size: number;
+  mime_type: string;
+  thumbnail_path: string | null;
+  is_public: boolean;
+  created_at: string | Date;
+}
+
+// 配置文件上传（同时接收作品文件 file 和可选的缩略图 thumbnail）
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -31,26 +47,42 @@ const upload = multer({
   }
 });
 
+// 判断文件是否为图片（用于缩略图校验）
+function isImageMime(mimeType: string, fileName: string): boolean {
+  if (mimeType && mimeType.startsWith('image/')) {
+    return true;
+  }
+  const lowerName = fileName.toLowerCase();
+  return /\.(png|jpg|jpeg|gif|webp|bmp)$/.test(lowerName);
+}
+
 // 提交作品
 router.post(
   '/',
   authenticateToken,
   requireStudent,
-  upload.single('file'),
+  upload.fields([
+    { name: 'file', maxCount: 1 },
+    { name: 'thumbnail', maxCount: 1 }
+  ]),
   async (req: Request, res: Response): Promise<void> => {
     try {
-      if (!req.file) {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const file = files?.['file']?.[0];
+
+      if (!file) {
         res.status(400).json({ error: '请上传文件' });
         return;
       }
 
-      const { title, description, type } = req.body;
-      const file = req.file;
+      const { title, description, type, is_public } = req.body;
 
       // 参数验证
       if (!title || !type) {
-        // 删除已上传的文件
         fs.unlinkSync(file.path);
+        if (files?.['thumbnail']?.[0]) {
+          try { fs.unlinkSync(files['thumbnail'][0].path); } catch { /* noop */ }
+        }
         res.status(400).json({ error: '请提供作品名称和类型' });
         return;
       }
@@ -76,11 +108,34 @@ router.post(
         return;
       }
 
+      // 处理缩略图文件（可选上传）
+      let thumbnailPath: string | null = null;
+      const thumbFile = files?.['thumbnail']?.[0];
+      if (thumbFile) {
+        // 校验缩略图必须是图片
+        if (!isImageMime(thumbFile.mimetype, thumbFile.originalname)) {
+          fs.unlinkSync(file.path);
+          fs.unlinkSync(thumbFile.path);
+          res.status(400).json({ error: '封面图必须是图片格式（PNG/JPG/GIF/WebP）' });
+          return;
+        }
+        thumbnailPath = thumbFile.filename;
+      }
+
+      // 如果是 image 类型且没上传自定义缩略图，直接用作品文件本身作为缩略图
+      if (!thumbnailPath && type === 'image') {
+        thumbnailPath = file.filename;
+      }
+
+      // 解析是否公开（支持字符串 "true" / "false" 或布尔值）
+      const isPublicRaw = typeof is_public === 'string' ? is_public.trim().toLowerCase() : String(!!is_public);
+      const isPublic = isPublicRaw === 'true' || isPublicRaw === '1';
+
       // 保存到数据库
       const result = await pool.query(
         `INSERT INTO artworks 
-         (student_id, student_name, title, description, type, file_name, file_path, file_size, mime_type)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         (student_id, student_name, title, description, type, file_name, file_path, file_size, mime_type, thumbnail_path, is_public)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          RETURNING *`,
         [
           req.user!.id,
@@ -91,7 +146,9 @@ router.post(
           file.originalname,
           file.filename,
           file.size,
-          file.mimetype
+          file.mimetype,
+          thumbnailPath,
+          isPublic
         ]
       );
 
@@ -110,6 +167,8 @@ router.post(
           filePath: artwork.file_path,
           fileSize: artwork.file_size,
           mimeType: artwork.mime_type,
+          thumbnailPath: artwork.thumbnail_path,
+          isPublic: !!artwork.is_public,
           createdAt: artwork.created_at
         }
       });
@@ -145,12 +204,68 @@ router.get(
         filePath: artwork.file_path,
         fileSize: artwork.file_size,
         mimeType: artwork.mime_type,
+        thumbnailPath: artwork.thumbnail_path,
+        isPublic: !!artwork.is_public,
         createdAt: artwork.created_at
       }));
 
       res.json({ artworks });
     } catch (error) {
       console.error('获取作品列表错误:', error);
+      res.status(500).json({ error: '服务器错误，请重试' });
+    }
+  }
+);
+
+// 公开作品广场列表（无需登录）
+router.get(
+  '/public',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { type, search } = req.query;
+      const typeValue = typeof type === 'string' ? type : '';
+
+      let query = 'SELECT * FROM artworks WHERE is_public = TRUE';
+      const params: string[] = [];
+      let paramIndex = 1;
+
+      // 按类型筛选
+      if (['image', 'video', 'html'].includes(typeValue)) {
+        query += ` AND type = $${paramIndex}`;
+        params.push(typeValue);
+        paramIndex++;
+      }
+
+      // 按关键词搜索
+      if (search && typeof search === 'string' && search.trim().length > 0) {
+        query += ` AND (title ILIKE $${paramIndex} OR student_name ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
+        params.push(`%${search}%`);
+        paramIndex++;
+      }
+
+      query += ' ORDER BY created_at DESC LIMIT 200';
+
+      const result = await pool.query<ArtworkRow>(query, params);
+
+      const artworks = result.rows.map((artwork) => ({
+        id: artwork.id,
+        studentId: artwork.student_id,
+        studentName: artwork.student_name,
+        title: artwork.title,
+        description: artwork.description,
+        type: artwork.type,
+        fileName: artwork.file_name,
+        filePath: artwork.file_path,
+        fileSize: artwork.file_size,
+        mimeType: artwork.mime_type,
+        thumbnailPath: artwork.thumbnail_path,
+        isPublic: !!artwork.is_public,
+        createdAt: artwork.created_at
+      }));
+
+      res.json({ artworks });
+    } catch (error) {
+      console.error('获取作品广场错误:', error);
       res.status(500).json({ error: '服务器错误，请重试' });
     }
   }
@@ -167,7 +282,7 @@ router.delete(
 
       // 检查作品是否存在且属于当前用户
       const checkResult = await pool.query(
-        'SELECT file_path FROM artworks WHERE id = $1 AND student_id = $2',
+        'SELECT file_path, thumbnail_path FROM artworks WHERE id = $1 AND student_id = $2',
         [id, req.user!.id]
       );
 
@@ -176,15 +291,25 @@ router.delete(
         return;
       }
 
-      const filePath = checkResult.rows[0].file_path;
+      const row = checkResult.rows[0];
+      const filePath = row.file_path;
+      const thumbPath = row.thumbnail_path;
 
       // 从数据库删除
       await pool.query('DELETE FROM artworks WHERE id = $1', [id]);
 
-      // 删除文件
+      // 删除作品文件
       const fullPath = resolveUploadPath(filePath);
       if (fs.existsSync(fullPath)) {
         fs.unlinkSync(fullPath);
+      }
+
+      // 删除缩略图文件（缩略图与作品文件不同时才删）
+      if (thumbPath && thumbPath !== filePath) {
+        const fullThumbPath = resolveUploadPath(thumbPath);
+        if (fs.existsSync(fullThumbPath)) {
+          try { fs.unlinkSync(fullThumbPath); } catch { /* noop */ }
+        }
       }
 
       res.json({ message: '作品删除成功' });

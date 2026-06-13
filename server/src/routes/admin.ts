@@ -49,6 +49,8 @@ router.get(
         filePath: artwork.file_path,
         fileSize: artwork.file_size,
         mimeType: artwork.mime_type,
+        thumbnailPath: artwork.thumbnail_path,
+        isPublic: !!artwork.is_public,
         createdAt: artwork.created_at
       }));
 

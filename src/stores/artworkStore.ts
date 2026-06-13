@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { Artwork, FilterOptions } from '../types';
-import { artworkApi, adminApi } from '../utils/api';
+import { artworkApi, adminApi, ArtworkApiItem } from '../utils/api';
 import { User } from '../types';
 
 interface ArtworkState {
   artworks: Artwork[];
   myWorks: Artwork[];
+  publicWorks: Artwork[];
   isLoading: boolean;
 
   // 初始化加载
@@ -16,13 +17,17 @@ interface ArtworkState {
   getStudentWorks: (studentId: string) => Artwork[];
   filterArtworks: (options?: FilterOptions) => Artwork[];
 
+  // 获取公开作品广场
+  fetchPublicWorks: (options?: FilterOptions) => Promise<void>;
+
   // 提交作品
   submitArtwork: (
     user: User,
     title: string,
     description: string,
     type: 'image' | 'video' | 'html',
-    file: File
+    file: File,
+    options?: { thumbnail?: File | null; isPublic?: boolean }
   ) => Promise<{ success: boolean; error?: string; artwork?: Artwork }>;
 
   // 删除作品
@@ -45,14 +50,40 @@ interface ArtworkState {
   }>;
 }
 
+// 根据后端返回的原始数据统一映射为前端 Artwork 对象
+function mapArtwork(a: ArtworkApiItem): Artwork {
+  // 缩略图 URL：优先使用 thumbnail_path，否则 image 类型使用 file_path
+  const thumbFile = a.thumbnailPath || a.thumbnail_path;
+  const fileForThumb = thumbFile || (a.type === 'image' ? a.filePath || a.file_path : null);
+  const thumbnailUrl = fileForThumb ? artworkApi.getFileUrl(fileForThumb) : undefined;
+
+  return {
+    id: a.id,
+    studentId: a.studentId || a.student_id,
+    studentName: a.studentName || a.student_name,
+    title: a.title,
+    description: a.description || '',
+    type: a.type,
+    fileName: a.fileName || a.file_name,
+    fileData: artworkApi.getFileUrl(a.filePath || a.file_path),
+    shareUrl: artworkApi.getHtmlShareUrl(a.filePath || a.file_path, a.fileName || a.file_name),
+    thumbnail: thumbnailUrl,
+    thumbnailPath: a.thumbnailPath || a.thumbnail_path || null,
+    isPublic: typeof a.isPublic === 'boolean' ? a.isPublic : !!a.is_public,
+    fileSize: a.fileSize || a.file_size,
+    mimeType: a.mimeType || a.mime_type,
+    createdAt: new Date(a.createdAt || a.created_at).getTime()
+  };
+}
+
 export const useArtworkStore = create<ArtworkState>((set, get) => ({
   artworks: [],
   myWorks: [],
+  publicWorks: [],
   isLoading: false,
 
   initialize: () => {
     set({ isLoading: true });
-    // 初始化时可以预加载数据
     set({ isLoading: false });
   },
 
@@ -61,22 +92,7 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
       const result = await artworkApi.getMyWorks();
       
       if (result.success && result.data) {
-        const artworks = result.data.artworks.map((a: any) => ({
-          id: a.id,
-          studentId: a.studentId,
-          studentName: a.studentName,
-          title: a.title,
-          description: a.description,
-          type: a.type,
-          fileName: a.fileName,
-          fileData: artworkApi.getFileUrl(a.filePath),
-          shareUrl: artworkApi.getHtmlShareUrl(a.filePath, a.fileName),
-          thumbnail: a.type === 'image' ? artworkApi.getFileUrl(a.filePath) : undefined,
-          fileSize: a.fileSize,
-          mimeType: a.mimeType,
-          createdAt: new Date(a.createdAt).getTime()
-        }));
-        
+        const artworks = result.data.artworks.map(mapArtwork);
         set({ myWorks: artworks });
       }
     } catch (error) {
@@ -112,7 +128,26 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
     });
   },
 
-  submitArtwork: async (user, title, description, type, file) => {
+  fetchPublicWorks: async (options) => {
+    try {
+      set({ isLoading: true });
+      const result = await artworkApi.getPublicWorks({
+        type: options?.type,
+        search: options?.search
+      });
+
+      if (result.success && result.data) {
+        const artworks = result.data.artworks.map(mapArtwork);
+        set({ publicWorks: artworks });
+      }
+    } catch (error) {
+      console.error('获取作品广场失败:', error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  submitArtwork: async (user, title, description, type, file, options) => {
     try {
       const formData = new FormData();
       formData.append('title', title);
@@ -120,26 +155,19 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
       formData.append('type', type);
       formData.append('file', file);
 
+      // 可选：封面缩略图
+      if (options?.thumbnail) {
+        formData.append('thumbnail', options.thumbnail);
+      }
+      // 可选：是否公开到作品广场
+      if (typeof options?.isPublic === 'boolean') {
+        formData.append('is_public', String(options.isPublic));
+      }
+
       const result = await artworkApi.submit(formData);
       
       if (result.success && result.data?.artwork) {
-        const artwork = {
-          id: result.data.artwork.id,
-          studentId: result.data.artwork.studentId,
-          studentName: result.data.artwork.studentName,
-          title: result.data.artwork.title,
-          description: result.data.artwork.description,
-          type: result.data.artwork.type,
-          fileName: result.data.artwork.fileName,
-          fileData: artworkApi.getFileUrl(result.data.artwork.filePath),
-          shareUrl: artworkApi.getHtmlShareUrl(result.data.artwork.filePath, result.data.artwork.fileName),
-          thumbnail: result.data.artwork.type === 'image'
-            ? artworkApi.getFileUrl(result.data.artwork.filePath)
-            : undefined,
-          fileSize: result.data.artwork.fileSize,
-          mimeType: result.data.artwork.mimeType,
-          createdAt: new Date(result.data.artwork.createdAt).getTime()
-        } satisfies Artwork;
+        const artwork = mapArtwork(result.data.artwork);
 
         // 重新获取作品列表
         await get().fetchMyWorks();
@@ -147,7 +175,7 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
       } else {
         return { success: false, error: result.error };
       }
-    } catch (error) {
+    } catch {
       return { success: false, error: '提交失败，请重试' };
     }
   },
@@ -157,15 +185,15 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
       const result = await artworkApi.deleteWork(id);
       
       if (result.success) {
-        // 从列表中移除
         set(state => ({
-          myWorks: state.myWorks.filter(w => w.id !== id)
+          myWorks: state.myWorks.filter(w => w.id !== id),
+          publicWorks: state.publicWorks.filter(w => w.id !== id)
         }));
         return { success: true };
       } else {
         return { success: false, error: result.error };
       }
-    } catch (error) {
+    } catch {
       return { success: false, error: '删除失败，请重试' };
     }
   },
@@ -176,13 +204,14 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
 
       if (result.success) {
         set(state => ({
-          artworks: state.artworks.filter(w => w.id !== id)
+          artworks: state.artworks.filter(w => w.id !== id),
+          publicWorks: state.publicWorks.filter(w => w.id !== id)
         }));
         return { success: true };
       }
 
       return { success: false, error: result.error };
-    } catch (error) {
+    } catch {
       return { success: false, error: '删除失败，请重试' };
     }
   },
@@ -195,22 +224,7 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
       });
       
       if (result.success && result.data) {
-        const artworks = result.data.artworks.map((a: any) => ({
-          id: a.id,
-          studentId: a.studentId,
-          studentName: a.studentName,
-          title: a.title,
-          description: a.description,
-          type: a.type,
-          fileName: a.fileName,
-          fileData: artworkApi.getFileUrl(a.filePath),
-          shareUrl: artworkApi.getHtmlShareUrl(a.filePath, a.fileName),
-          thumbnail: a.type === 'image' ? artworkApi.getFileUrl(a.filePath) : undefined,
-          fileSize: a.fileSize,
-          mimeType: a.mimeType,
-          createdAt: new Date(a.createdAt).getTime()
-        }));
-        
+        const artworks = result.data.artworks.map(mapArtwork);
         set({ artworks });
       }
     } catch (error) {
@@ -222,7 +236,7 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
     try {
       const result = await adminApi.batchDownload(artworkIds);
       return result;
-    } catch (error) {
+    } catch {
       return { success: false, error: '下载失败，请重试' };
     }
   },

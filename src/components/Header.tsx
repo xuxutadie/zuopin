@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, LogOut, Menu, X } from 'lucide-react';
+import { User, LogOut, Menu, X, GalleryHorizontalEnd } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 
 interface HeaderProps {
@@ -31,9 +31,18 @@ export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'dark'
           </div>
 
           {/* 桌面端导航 */}
-          {showNav && currentUser && (
+          {showNav && (
             <nav className="hidden md:flex items-center space-x-6">
-              {currentUser.role === 'student' && (
+              {/* 作品广场（所有人都能看到） */}
+              <a
+                href="/gallery"
+                className={`flex items-center space-x-1 ${isDark ? 'text-slate-300 hover:text-blue-300' : 'text-gray-600 hover:text-blue-600'} transition-colors`}
+              >
+                <GalleryHorizontalEnd className="w-4 h-4" />
+                <span>作品广场</span>
+              </a>
+
+              {currentUser?.role === 'student' && (
                 <>
                   <a 
                     href="/student" 
@@ -55,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'dark'
                   </a>
                 </>
               )}
-              {currentUser.role === 'teacher' && (
+              {currentUser?.role === 'teacher' && (
                 <>
                   <a 
                     href="/teacher" 
@@ -116,9 +125,18 @@ export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'dark'
         </div>
 
         {/* 移动端菜单 */}
-        {showNav && currentUser && mobileMenuOpen && (
+        {showNav && mobileMenuOpen && (
           <nav className={`py-4 md:hidden ${isDark ? 'border-t border-white/10' : 'border-t'}`}>
-            {currentUser.role === 'student' && (
+            {/* 作品广场 */}
+            <a
+              href="/gallery"
+              className={`flex items-center space-x-2 py-2 ${isDark ? 'text-slate-300 hover:text-blue-300' : 'text-gray-600 hover:text-blue-600'}`}
+            >
+              <GalleryHorizontalEnd className="w-4 h-4" />
+              <span>作品广场</span>
+            </a>
+
+            {currentUser?.role === 'student' && (
               <>
                 <a 
                   href="/student" 
@@ -140,7 +158,7 @@ export const Header: React.FC<HeaderProps> = ({ showNav = true, variant = 'dark'
                 </a>
               </>
             )}
-            {currentUser.role === 'teacher' && (
+            {currentUser?.role === 'teacher' && (
               <>
                 <a 
                   href="/teacher" 

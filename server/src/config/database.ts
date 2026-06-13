@@ -57,7 +57,7 @@ export async function initializeDatabase(): Promise<void> {
     `);
     console.log('✅ 用户表字段检查完成');
 
-    // 创建作品表
+    // 创建作品表（新增 is_public 控制是否在作品广场公开、thumbnail_path 存储作品缩略图）
     await client.query(`
       CREATE TABLE IF NOT EXISTS artworks (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -71,10 +71,18 @@ export async function initializeDatabase(): Promise<void> {
         file_size BIGINT NOT NULL,
         mime_type VARCHAR(100) NOT NULL,
         thumbnail_path VARCHAR(500),
+        is_public BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
     console.log('✅ 作品表创建成功');
+
+    // 兼容旧数据库：为已存在的表补齐新字段
+    await client.query(`
+      ALTER TABLE artworks
+      ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE
+    `);
+    console.log('✅ 作品表字段检查完成');
 
     // 创建老师账号
     const teacherName = '30761985';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -9,8 +9,15 @@ import { FileUpload } from '../components/FileUpload';
 import { useAuthStore } from '../stores/authStore';
 import { useArtworkStore } from '../stores/artworkStore';
 import { validateFileSize, validateFileType } from '../utils/fileHelper';
-import { ArrowLeft, FileImage, FileVideo, FileCode, CheckCircle, Link2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, FileImage, FileVideo, FileCode, CheckCircle, Link2, ExternalLink, Upload, X, Sparkles, Globe } from 'lucide-react';
 import { clsx } from 'clsx';
+
+// 判断文件是否为图片（用于缩略图验证）
+function isImageFile(file: File): boolean {
+  if (file.type.startsWith('image/')) return true;
+  const lower = file.name.toLowerCase();
+  return /\.(png|jpg|jpeg|gif|webp|bmp)$/.test(lower);
+}
 
 export const SubmitWork: React.FC = () => {
   const navigate = useNavigate();
@@ -21,12 +28,18 @@ export const SubmitWork: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState<string>('');
+  const [isPublic, setIsPublic] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [fileError, setFileError] = useState('');
+  const [thumbError, setThumbError] = useState('');
   const [success, setSuccess] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const [copied, setCopied] = useState(false);
+
+  const thumbInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (selectedFile: File) => {
     setError('');
@@ -53,6 +66,43 @@ export const SubmitWork: React.FC = () => {
     }
 
     setFile(selectedFile);
+  };
+
+  const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setThumbError('');
+    const f = e.target.files?.[0];
+    if (!f) return;
+
+    if (!isImageFile(f)) {
+      setThumbError('封面缩略图仅支持 PNG / JPG / GIF / WebP 图片');
+      return;
+    }
+
+    // 限制缩略图大小 <= 5MB
+    if (f.size > 5 * 1024 * 1024) {
+      setThumbError('封面缩略图不能超过 5MB');
+      return;
+    }
+
+    // 清理旧的预览 URL
+    if (thumbnailPreviewUrl) {
+      URL.revokeObjectURL(thumbnailPreviewUrl);
+    }
+
+    setThumbnailFile(f);
+    setThumbnailPreviewUrl(URL.createObjectURL(f));
+  };
+
+  const removeThumbnail = () => {
+    if (thumbnailPreviewUrl) {
+      URL.revokeObjectURL(thumbnailPreviewUrl);
+    }
+    setThumbnailFile(null);
+    setThumbnailPreviewUrl('');
+    setThumbError('');
+    if (thumbInputRef.current) {
+      thumbInputRef.current.value = '';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,7 +132,11 @@ export const SubmitWork: React.FC = () => {
         title.trim(),
         description.trim(),
         workType,
-        file
+        file,
+        {
+          thumbnail: thumbnailFile,
+          isPublic
+        }
       );
       
       if (result.success) {
@@ -90,11 +144,11 @@ export const SubmitWork: React.FC = () => {
         setSuccess(true);
         setTimeout(() => {
           navigate('/student/works');
-        }, result.artwork?.shareUrl ? 5000 : 2000);
+        }, result.artwork?.shareUrl ? 5000 : 2500);
       } else {
         setError(result.error || '提交失败，请重试');
       }
-    } catch (err) {
+    } catch {
       setError('提交失败，请重试');
     } finally {
       setIsSubmitting(false);
@@ -138,7 +192,7 @@ export const SubmitWork: React.FC = () => {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       window.prompt('复制失败，请手动复制下方链接：', shareUrl);
     }
   };
@@ -152,7 +206,9 @@ export const SubmitWork: React.FC = () => {
               <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
             <h2 className="mb-2 text-2xl font-bold text-slate-900">提交成功！</h2>
-            <p className="mb-4 text-slate-600">你的作品已成功提交，正在跳转...</p>
+            <p className="mb-4 text-slate-600">
+              你的作品已成功提交{isPublic && '，并已展示在作品广场中'}，正在跳转...
+            </p>
             {shareUrl && (
               <div className="mb-6 rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-left">
                 <p className="text-sm font-semibold text-slate-900">已生成公开分享链接</p>
@@ -252,7 +308,7 @@ export const SubmitWork: React.FC = () => {
                 </div>
               </div>
 
-              {/* 文件上传 */}
+              {/* 主作品文件上传 */}
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   上传作品文件
@@ -275,6 +331,53 @@ export const SubmitWork: React.FC = () => {
                 )}
               </div>
 
+              {/* 封面缩略图上传（HTML/视频类型才需要，图片类型可以用自身做缩略图） */}
+              {workType !== 'image' && (
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    <Sparkles className="inline w-4 h-4 mr-1 text-amber-500" />
+                    封面缩略图（可选，将在作品广场中展示）
+                  </label>
+                  {!thumbnailPreviewUrl ? (
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <Upload className="w-8 h-8 text-slate-400 mb-2" />
+                      <p className="text-sm text-slate-600">点击上传封面图片</p>
+                      <p className="text-xs text-slate-400 mt-1">支持 PNG / JPG / GIF / WebP，不超过 5MB</p>
+                      <input
+                        ref={thumbInputRef}
+                        type="file"
+                        className="hidden"
+                        accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                        onChange={handleThumbnailSelect}
+                      />
+                    </label>
+                  ) : (
+                    <div className="relative border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                      <img
+                        src={thumbnailPreviewUrl}
+                        alt="缩略图预览"
+                        className="w-full h-48 object-contain bg-slate-100"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeThumbnail}
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                      <div className="p-2 text-xs text-slate-600 bg-white">
+                        <p>已选择：{thumbnailFile?.name}</p>
+                      </div>
+                    </div>
+                  )}
+                  {thumbError && (
+                    <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-600">{thumbError}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* 作品名称 */}
               <Input
                 label="作品名称"
@@ -296,6 +399,48 @@ export const SubmitWork: React.FC = () => {
                 className={lightInputClassName}
                 rows={4}
               />
+
+              {/* 是否公开到作品广场 */}
+              <div className="border-t border-slate-200 pt-6">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  <Globe className="inline w-4 h-4 mr-1 text-blue-500" />
+                  作品展示设置
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsPublic(!isPublic)}
+                  className={clsx(
+                    'w-full p-4 rounded-lg border-2 transition-all text-left',
+                    'flex items-center justify-between',
+                    isPublic
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                  )}
+                >
+                  <div>
+                    <p className={clsx(
+                      'text-sm font-medium',
+                      isPublic ? 'text-blue-700' : 'text-slate-700'
+                    )}>
+                      公开到作品广场
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {isPublic
+                        ? '其他人可以在作品广场浏览并欣赏你的作品'
+                        : '只有你自己和老师可以查看此作品'}
+                    </p>
+                  </div>
+                  {/* 自定义开关样式 */}
+                  <div
+                    className={clsx(
+                      'w-11 h-6 rounded-full transition-colors flex items-center',
+                      isPublic ? 'bg-blue-600 justify-end' : 'bg-slate-300 justify-start'
+                    )}
+                  >
+                    <span className="w-5 h-5 bg-white rounded-full shadow mx-0.5" />
+                  </div>
+                </button>
+              </div>
 
               {/* 错误提示 */}
               {error && (
