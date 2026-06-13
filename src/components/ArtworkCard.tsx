@@ -72,6 +72,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
   const [showPreview, setShowPreview] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [htmlPreviewError, setHtmlPreviewError] = useState(false);
 
   const Icon = getTypeIcon(artwork.type);
 
@@ -114,6 +115,8 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
   // 是否展示缩略图图片
   const hasThumbnail = !!artwork.thumbnail && !imageError;
   const canTogglePublic = showPublicToggle && !!onTogglePublic;
+  const htmlPreviewUrl = artwork.type === 'html' ? artwork.shareUrl || artwork.fileData : '';
+  const canShowHtmlPreview = artwork.type === 'html' && !!htmlPreviewUrl && !htmlPreviewError;
 
   return (
     <>
@@ -144,8 +147,23 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
               loading="lazy"
             />
           )}
+          {canShowHtmlPreview && !hasThumbnail && (
+            <>
+              <iframe
+                src={htmlPreviewUrl}
+                title={`${artwork.title} 预览`}
+                sandbox="allow-scripts allow-same-origin"
+                loading="lazy"
+                onError={() => setHtmlPreviewError(true)}
+                className="absolute inset-0 h-full w-full border-0 bg-white pointer-events-none"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 pb-3 pt-10">
+                <p className="text-center text-xs font-medium text-white/90">点击打开 HTML 作品</p>
+              </div>
+            </>
+          )}
           {/* 渐变遮罩 + 图标 */}
-          {!hasThumbnail && (
+          {!hasThumbnail && !canShowHtmlPreview && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
               {artwork.type === 'html' ? (
                 <div className="w-4/5 max-w-[220px] overflow-hidden rounded-xl border border-white/20 bg-slate-950/80 shadow-2xl">
