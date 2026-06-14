@@ -7,6 +7,11 @@ import { authenticateToken, requireTeacher } from '../middleware/auth';
 
 const router = Router();
 
+interface StudentArtworkFile {
+  file_path: string;
+  thumbnail_path: string | null;
+}
+
 // 获取所有作品列表
 router.get(
   '/',
@@ -59,6 +64,51 @@ router.get(
       res.json({ artworks });
     } catch (error) {
       console.error('获取作品列表错误:', error);
+      res.status(500).json({ error: '服务器错误，请重试' });
+    }
+  }
+);
+
+// 获取注册学生明细
+router.get(
+  '/students',
+  authenticateToken,
+  requireTeacher,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const result = await pool.query(`
+        SELECT
+          users.id,
+          users.name,
+          users.created_at,
+          COUNT(artworks.id)::int AS work_count,
+          COUNT(artworks.id) FILTER (WHERE artworks.is_public = TRUE)::int AS public_work_count,
+          COUNT(artworks.id) FILTER (WHERE artworks.type = 'image')::int AS image_count,
+          COUNT(artworks.id) FILTER (WHERE artworks.type = 'video')::int AS video_count,
+          COUNT(artworks.id) FILTER (WHERE artworks.type = 'html')::int AS html_count,
+          MAX(artworks.created_at) AS last_submitted_at
+        FROM users
+        LEFT JOIN artworks ON artworks.student_id = users.id
+        WHERE users.role = 'student'
+        GROUP BY users.id, users.name, users.created_at
+        ORDER BY users.created_at DESC
+      `);
+
+      const students = result.rows.map(student => ({
+        id: student.id,
+        name: student.name,
+        createdAt: student.created_at,
+        workCount: Number(student.work_count || 0),
+        publicWorkCount: Number(student.public_work_count || 0),
+        imageCount: Number(student.image_count || 0),
+        videoCount: Number(student.video_count || 0),
+        htmlCount: Number(student.html_count || 0),
+        lastSubmittedAt: student.last_submitted_at
+      }));
+
+      res.json({ students });
+    } catch (error) {
+      console.error('获取学生明细错误:', error);
       res.status(500).json({ error: '服务器错误，请重试' });
     }
   }
@@ -192,6 +242,61 @@ router.patch(
       });
     } catch (error) {
       console.error('设置作品公开状态错误:', error);
+      res.status(500).json({ error: '服务器错误，请重试' });
+    }
+  }
+);
+
+// 老师删除注册学生，同时删除该学生提交的作品文件
+router.delete(
+  '/students/:id',
+  authenticateToken,
+  requireTeacher,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+
+      const studentResult = await pool.query(
+        `SELECT id, name FROM users WHERE id = $1 AND role = 'student'`,
+        [id]
+      );
+
+      if (studentResult.rows.length === 0) {
+        res.status(404).json({ error: '学生不存在' });
+        return;
+      }
+
+      const artworkResult = await pool.query<StudentArtworkFile>(
+        'SELECT file_path, thumbnail_path FROM artworks WHERE student_id = $1',
+        [id]
+      );
+
+      await pool.query('DELETE FROM users WHERE id = $1 AND role = $2', [id, 'student']);
+
+      // 数据库通过外键级联删除作品记录，这里负责清理实际上传文件。
+      for (const artwork of artworkResult.rows) {
+        const filePath = resolveUploadPath(artwork.file_path);
+        if (fs.existsSync(filePath)) {
+          try { fs.unlinkSync(filePath); } catch { /* 文件清理失败不影响账号删除 */ }
+        }
+
+        if (artwork.thumbnail_path && artwork.thumbnail_path !== artwork.file_path) {
+          const thumbnailPath = resolveUploadPath(artwork.thumbnail_path);
+          if (fs.existsSync(thumbnailPath)) {
+            try { fs.unlinkSync(thumbnailPath); } catch { /* 文件清理失败不影响账号删除 */ }
+          }
+        }
+      }
+
+      res.json({
+        message: '学生账号及其作品已删除',
+        student: {
+          id: studentResult.rows[0].id,
+          name: studentResult.rows[0].name
+        }
+      });
+    } catch (error) {
+      console.error('删除学生错误:', error);
       res.status(500).json({ error: '服务器错误，请重试' });
     }
   }

@@ -96,6 +96,18 @@ export interface ArtworkApiItem {
   created_at?: string | number;
 }
 
+export interface StudentSummaryItem {
+  id: string;
+  name: string;
+  createdAt: string;
+  workCount: number;
+  publicWorkCount: number;
+  imageCount: number;
+  videoCount: number;
+  htmlCount: number;
+  lastSubmittedAt: string | null;
+}
+
 async function readResponseData(response: Response): Promise<unknown> {
   const text = await response.text();
 
@@ -297,6 +309,20 @@ export const adminApi = {
     }>(`/admin/artworks/${id}/public`, {
       method: 'PATCH',
       body: JSON.stringify({ isPublic })
+    });
+  },
+
+  // 获取注册学生明细
+  getStudents: async () => {
+    return request<{
+      students: StudentSummaryItem[];
+    }>('/admin/artworks/students');
+  },
+
+  // 删除注册学生及其作品
+  deleteStudent: async (id: string) => {
+    return request(`/admin/artworks/students/${id}`, {
+      method: 'DELETE'
     });
   },
 

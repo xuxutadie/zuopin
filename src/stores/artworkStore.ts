@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Artwork, FilterOptions } from '../types';
+import { Artwork, FilterOptions, StudentSummary } from '../types';
 import { artworkApi, adminApi, ArtworkApiItem } from '../utils/api';
 import { User } from '../types';
 
@@ -7,6 +7,7 @@ interface ArtworkState {
   artworks: Artwork[];
   myWorks: Artwork[];
   publicWorks: Artwork[];
+  students: StudentSummary[];
   isLoading: boolean;
 
   // 初始化加载
@@ -41,6 +42,12 @@ interface ArtworkState {
 
   // 获取所有作品（老师端）
   fetchAllArtworks: (options?: FilterOptions) => Promise<void>;
+
+  // 获取注册学生明细（老师端）
+  fetchStudents: () => Promise<void>;
+
+  // 删除注册学生（老师端）
+  deleteStudent: (id: string) => Promise<{ success: boolean; error?: string }>;
 
   // 批量下载
   batchDownload: (artworkIds: string[]) => Promise<{ success: boolean; error?: string }>;
@@ -83,6 +90,7 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
   artworks: [],
   myWorks: [],
   publicWorks: [],
+  students: [],
   isLoading: false,
 
   initialize: () => {
@@ -264,6 +272,38 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
       }
     } catch (error) {
       console.error('获取作品列表失败:', error);
+    }
+  },
+
+  fetchStudents: async () => {
+    try {
+      const result = await adminApi.getStudents();
+
+      if (result.success && result.data) {
+        set({ students: result.data.students });
+      }
+    } catch (error) {
+      console.error('获取学生明细失败:', error);
+    }
+  },
+
+  deleteStudent: async (id) => {
+    try {
+      const result = await adminApi.deleteStudent(id);
+
+      if (!result.success) {
+        return { success: false, error: result.error || '删除学生失败' };
+      }
+
+      set(state => ({
+        students: state.students.filter(student => student.id !== id),
+        artworks: state.artworks.filter(artwork => artwork.studentId !== id),
+        publicWorks: state.publicWorks.filter(artwork => artwork.studentId !== id)
+      }));
+
+      return { success: true };
+    } catch {
+      return { success: false, error: '删除学生失败，请重试' };
     }
   },
 

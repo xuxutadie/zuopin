@@ -6,15 +6,16 @@ import { Button } from '../components/Button';
 import { Card, CardTitle, CardContent } from '../components/Card';
 import { useAuthStore } from '../stores/authStore';
 import { useArtworkStore } from '../stores/artworkStore';
-import { FolderOpen, Users, FileImage, FileVideo, FileCode, Download } from 'lucide-react';
+import { FolderOpen, Users, FileImage, Download, Trash2, Clock } from 'lucide-react';
 
 export const TeacherDashboard: React.FC = () => {
   const { currentUser } = useAuthStore();
-  const { artworks, fetchAllArtworks } = useArtworkStore();
+  const { artworks, students, fetchAllArtworks, fetchStudents, deleteStudent } = useArtworkStore();
 
   useEffect(() => {
     fetchAllArtworks();
-  }, [fetchAllArtworks]);
+    fetchStudents();
+  }, [fetchAllArtworks, fetchStudents]);
   
   const stats = {
     totalStudents: new Set(artworks.map(a => a.studentId)).size,
@@ -24,6 +25,26 @@ export const TeacherDashboard: React.FC = () => {
     htmls: artworks.filter(w => w.type === 'html').length
   };
   const lightCardClassName = '!border-slate-200 !bg-white !text-slate-900 shadow-lg shadow-black/20';
+
+  const handleDeleteStudent = async (studentId: string, studentName: string) => {
+    const confirmed = window.confirm(
+      `确定删除学生「${studentName}」吗？\n\n删除后将同时移除该学生账号、所有作品记录和上传文件，且无法恢复。`
+    );
+    if (!confirmed) return;
+
+    const result = await deleteStudent(studentId);
+    if (!result.success) {
+      alert(result.error || '删除学生失败，请重试');
+      return;
+    }
+
+    await fetchAllArtworks();
+  };
+
+  const formatDate = (dateValue: string | null) => {
+    if (!dateValue) return '暂无';
+    return new Date(dateValue).toLocaleString();
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -108,6 +129,81 @@ export const TeacherDashboard: React.FC = () => {
               </div>
             </Card>
           </div>
+
+          {/* 注册学生明细 */}
+          <Card className={`${lightCardClassName} mb-8`}>
+            <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <CardTitle className="text-slate-900">注册学生明细</CardTitle>
+                <CardContent className="mt-1 text-slate-600">
+                  <p className="text-sm">查看已注册学生、作品数量和最近提交情况</p>
+                </CardContent>
+              </div>
+              <div className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700">
+                共 {students.length} 位注册学生
+              </div>
+            </div>
+
+            {students.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[760px] border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-500">
+                      <th className="py-3 pr-4 font-semibold">学生姓名</th>
+                      <th className="py-3 pr-4 font-semibold">注册时间</th>
+                      <th className="py-3 pr-4 font-semibold">作品统计</th>
+                      <th className="py-3 pr-4 font-semibold">广场展示</th>
+                      <th className="py-3 pr-4 font-semibold">最近提交</th>
+                      <th className="py-3 text-right font-semibold">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {students.map(student => (
+                      <tr key={student.id} className="border-b border-slate-100 last:border-0">
+                        <td className="py-3 pr-4">
+                          <div className="font-semibold text-slate-900">{student.name}</div>
+                          <div className="text-xs text-slate-400">ID: {student.id.slice(0, 8)}</div>
+                        </td>
+                        <td className="py-3 pr-4 text-slate-600">
+                          {formatDate(student.createdAt)}
+                        </td>
+                        <td className="py-3 pr-4">
+                          <div className="font-medium text-slate-900">共 {student.workCount} 个</div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            图片 {student.imageCount} / 视频 {student.videoCount} / HTML {student.htmlCount}
+                          </div>
+                        </td>
+                        <td className="py-3 pr-4 text-slate-600">
+                          {student.publicWorkCount} 个
+                        </td>
+                        <td className="py-3 pr-4 text-slate-600">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4 text-slate-400" />
+                            <span>{formatDate(student.lastSubmittedAt)}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 text-right">
+                          <button
+                            onClick={() => handleDeleteStudent(student.id, student.name)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            删除注册者
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                <Users className="mx-auto mb-3 h-10 w-10 text-slate-400" />
+                <p className="font-medium text-slate-700">暂无注册学生</p>
+                <p className="mt-1 text-sm text-slate-500">学生注册后会显示在这里</p>
+              </div>
+            )}
+          </Card>
 
           {/* 功能说明 */}
           <Card className={lightCardClassName}>

@@ -6,6 +6,19 @@ export interface User {
   createdAt: number;
 }
 
+// 老师端学生明细
+export interface StudentSummary {
+  id: string;
+  name: string;
+  createdAt: string;
+  workCount: number;
+  publicWorkCount: number;
+  imageCount: number;
+  videoCount: number;
+  htmlCount: number;
+  lastSubmittedAt: string | null;
+}
+
 // 作品类型
 export interface Artwork {
   id: string;
