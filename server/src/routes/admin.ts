@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs';
+import path from 'path';
 import archiver from 'archiver';
 import pool from '../config/database';
 import { resolveUploadPath } from '../config/storage';
@@ -10,6 +11,34 @@ const router = Router();
 interface StudentArtworkFile {
   file_path: string;
   thumbnail_path: string | null;
+  html_entry_path: string | null;
+}
+
+const HTML_PROJECT_ROOT = 'html-projects';
+
+function safeDeleteFile(filePath: string): void {
+  if (fs.existsSync(filePath)) {
+    try { fs.unlinkSync(filePath); } catch { /* 文件清理失败不影响主流程 */ }
+  }
+}
+
+function safeDeleteDirectory(dirPath: string): void {
+  if (fs.existsSync(dirPath)) {
+    try { fs.rmSync(dirPath, { recursive: true, force: true }); } catch { /* 文件清理失败不影响主流程 */ }
+  }
+}
+
+function getHtmlProjectDir(htmlEntryPath: string | null): string | null {
+  if (!htmlEntryPath?.startsWith(`${HTML_PROJECT_ROOT}/`)) {
+    return null;
+  }
+
+  const [, projectId] = htmlEntryPath.split('/');
+  if (!projectId) {
+    return null;
+  }
+
+  return resolveUploadPath(path.posix.join(HTML_PROJECT_ROOT, projectId));
 }
 
 // 获取所有作品列表
@@ -57,6 +86,7 @@ router.get(
         fileSize: artwork.file_size,
         mimeType: artwork.mime_type,
         thumbnailPath: artwork.thumbnail_path,
+        htmlEntryPath: artwork.html_entry_path,
         isPublic: !!artwork.is_public,
         createdAt: artwork.created_at
       }));
@@ -236,6 +266,7 @@ router.patch(
           fileSize: artwork.file_size,
           mimeType: artwork.mime_type,
           thumbnailPath: artwork.thumbnail_path,
+          htmlEntryPath: artwork.html_entry_path,
           isPublic: !!artwork.is_public,
           createdAt: artwork.created_at
         }
@@ -267,7 +298,7 @@ router.delete(
       }
 
       const artworkResult = await pool.query<StudentArtworkFile>(
-        'SELECT file_path, thumbnail_path FROM artworks WHERE student_id = $1',
+        'SELECT file_path, thumbnail_path, html_entry_path FROM artworks WHERE student_id = $1',
         [id]
       );
 
@@ -276,15 +307,16 @@ router.delete(
       // 数据库通过外键级联删除作品记录，这里负责清理实际上传文件。
       for (const artwork of artworkResult.rows) {
         const filePath = resolveUploadPath(artwork.file_path);
-        if (fs.existsSync(filePath)) {
-          try { fs.unlinkSync(filePath); } catch { /* 文件清理失败不影响账号删除 */ }
-        }
+        safeDeleteFile(filePath);
 
         if (artwork.thumbnail_path && artwork.thumbnail_path !== artwork.file_path) {
           const thumbnailPath = resolveUploadPath(artwork.thumbnail_path);
-          if (fs.existsSync(thumbnailPath)) {
-            try { fs.unlinkSync(thumbnailPath); } catch { /* 文件清理失败不影响账号删除 */ }
-          }
+          safeDeleteFile(thumbnailPath);
+        }
+
+        const htmlProjectDir = getHtmlProjectDir(artwork.html_entry_path);
+        if (htmlProjectDir) {
+          safeDeleteDirectory(htmlProjectDir);
         }
       }
 
@@ -312,7 +344,7 @@ router.delete(
       const { id } = req.params;
 
       const result = await pool.query(
-        'SELECT file_path FROM artworks WHERE id = $1',
+        'SELECT file_path, thumbnail_path, html_entry_path FROM artworks WHERE id = $1',
         [id]
       );
 
@@ -321,12 +353,20 @@ router.delete(
         return;
       }
 
-      const filePath = resolveUploadPath(result.rows[0].file_path);
+      const artwork = result.rows[0];
+      const filePath = resolveUploadPath(artwork.file_path);
 
       await pool.query('DELETE FROM artworks WHERE id = $1', [id]);
 
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+      safeDeleteFile(filePath);
+
+      if (artwork.thumbnail_path && artwork.thumbnail_path !== artwork.file_path) {
+        safeDeleteFile(resolveUploadPath(artwork.thumbnail_path));
+      }
+
+      const htmlProjectDir = getHtmlProjectDir(artwork.html_entry_path);
+      if (htmlProjectDir) {
+        safeDeleteDirectory(htmlProjectDir);
       }
 
       res.json({ message: '作品删除成功' });

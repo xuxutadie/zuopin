@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs';
+import path from 'path';
 import multer from 'multer';
+import AdmZip from 'adm-zip';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../config/database';
 import { ensureUploadDir, resolveUploadPath } from '../config/storage';
@@ -26,9 +28,14 @@ interface ArtworkRow {
   file_size: number;
   mime_type: string;
   thumbnail_path: string | null;
+  html_entry_path: string | null;
   is_public: boolean;
   created_at: string | Date;
 }
+
+const HTML_PROJECT_ROOT = 'html-projects';
+const MAX_HTML_PROJECT_FILES = 300;
+const MAX_HTML_PROJECT_SIZE = 100 * 1024 * 1024;
 
 // 配置文件上传（同时接收作品文件 file 和可选的缩略图 thumbnail）
 const storage = multer.diskStorage({
@@ -54,6 +61,114 @@ function isImageMime(mimeType: string, fileName: string): boolean {
   }
   const lowerName = fileName.toLowerCase();
   return /\.(png|jpg|jpeg|gif|webp|bmp)$/.test(lowerName);
+}
+
+function isZipFile(file: Express.Multer.File): boolean {
+  return file.originalname.toLowerCase().endsWith('.zip')
+    || file.mimetype === 'application/zip'
+    || file.mimetype === 'application/x-zip-compressed';
+}
+
+function safeDeleteFile(filePath: string): void {
+  if (fs.existsSync(filePath)) {
+    try { fs.unlinkSync(filePath); } catch { /* 文件清理失败不影响主流程 */ }
+  }
+}
+
+function safeDeleteDirectory(dirPath: string): void {
+  if (fs.existsSync(dirPath)) {
+    try { fs.rmSync(dirPath, { recursive: true, force: true }); } catch { /* 文件清理失败不影响主流程 */ }
+  }
+}
+
+function normalizeZipEntryName(entryName: string): string {
+  return entryName.replace(/\\/g, '/').replace(/^\/+/, '');
+}
+
+function validateZipEntryName(entryName: string): boolean {
+  const normalized = normalizeZipEntryName(entryName);
+  return Boolean(normalized)
+    && !normalized.includes('..')
+    && !path.isAbsolute(normalized);
+}
+
+function findHtmlEntry(entries: AdmZip.IZipEntry[]): string | null {
+  const fileNames = entries
+    .filter(entry => !entry.isDirectory)
+    .map(entry => normalizeZipEntryName(entry.entryName))
+    .filter(name => name.toLowerCase().endsWith('.html') || name.toLowerCase().endsWith('.htm'));
+
+  if (fileNames.length === 0) {
+    return null;
+  }
+
+  const indexFile = fileNames
+    .filter(name => path.posix.basename(name).toLowerCase() === 'index.html')
+    .sort((a, b) => a.split('/').length - b.split('/').length)[0];
+
+  return indexFile || fileNames.sort((a, b) => a.split('/').length - b.split('/').length)[0];
+}
+
+function getHtmlProjectDir(htmlEntryPath: string | null): string | null {
+  if (!htmlEntryPath?.startsWith(`${HTML_PROJECT_ROOT}/`)) {
+    return null;
+  }
+
+  const [, projectId] = htmlEntryPath.split('/');
+  if (!projectId) {
+    return null;
+  }
+
+  return resolveUploadPath(`${HTML_PROJECT_ROOT}/${projectId}`);
+}
+
+function extractHtmlProject(file: Express.Multer.File, projectId: string): string {
+  const zip = new AdmZip(file.path);
+  const entries = zip.getEntries();
+  const files = entries.filter(entry => !entry.isDirectory);
+
+  if (files.length === 0) {
+    throw new Error('ZIP 中没有可用文件');
+  }
+
+  if (files.length > MAX_HTML_PROJECT_FILES) {
+    throw new Error(`ZIP 文件数量不能超过 ${MAX_HTML_PROJECT_FILES} 个`);
+  }
+
+  let totalSize = 0;
+  for (const entry of files) {
+    if (!validateZipEntryName(entry.entryName)) {
+      throw new Error('ZIP 中包含不安全的文件路径');
+    }
+    totalSize += entry.header.size;
+  }
+
+  if (totalSize > MAX_HTML_PROJECT_SIZE) {
+    throw new Error('ZIP 解压后文件总大小不能超过 100MB');
+  }
+
+  const entryName = findHtmlEntry(entries);
+  if (!entryName) {
+    throw new Error('ZIP 中没有找到 index.html 或其他 HTML 入口文件');
+  }
+
+  const projectRelativeDir = `${HTML_PROJECT_ROOT}/${projectId}`;
+  const projectDir = resolveUploadPath(projectRelativeDir);
+  fs.mkdirSync(projectDir, { recursive: true });
+
+  for (const entry of files) {
+    const normalizedName = normalizeZipEntryName(entry.entryName);
+    const outputPath = path.resolve(projectDir, normalizedName);
+
+    if (!outputPath.startsWith(projectDir)) {
+      throw new Error('ZIP 中包含不安全的文件路径');
+    }
+
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, entry.getData());
+  }
+
+  return `${projectRelativeDir}/${entryName}`;
 }
 
 // 提交作品
@@ -127,6 +242,34 @@ router.post(
         thumbnailPath = file.filename;
       }
 
+      // HTML 作品入口：单个 HTML 文件直接访问；ZIP 静态网站先解压并寻找入口文件。
+      let htmlEntryPath: string | null = null;
+      let htmlProjectDir: string | null = null;
+      if (type === 'html') {
+        if (isZipFile(file)) {
+          const projectId = uuidv4();
+          htmlProjectDir = resolveUploadPath(`${HTML_PROJECT_ROOT}/${projectId}`);
+          try {
+            htmlEntryPath = extractHtmlProject(file, projectId);
+          } catch (error) {
+            fs.unlinkSync(file.path);
+            if (thumbFile) {
+              safeDeleteFile(thumbFile.path);
+            }
+            if (htmlProjectDir) {
+              safeDeleteDirectory(htmlProjectDir);
+            }
+
+            res.status(400).json({
+              error: error instanceof Error ? error.message : '静态网站 ZIP 解析失败'
+            });
+            return;
+          }
+        } else {
+          htmlEntryPath = file.filename;
+        }
+      }
+
       // 解析是否公开（支持字符串 "true" / "false" 或布尔值）
       const isPublicRaw = typeof is_public === 'string' ? is_public.trim().toLowerCase() : String(!!is_public);
       const isPublic = isPublicRaw === 'true' || isPublicRaw === '1';
@@ -134,8 +277,8 @@ router.post(
       // 保存到数据库
       const result = await pool.query(
         `INSERT INTO artworks 
-         (student_id, student_name, title, description, type, file_name, file_path, file_size, mime_type, thumbnail_path, is_public)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         (student_id, student_name, title, description, type, file_name, file_path, file_size, mime_type, thumbnail_path, html_entry_path, is_public)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          RETURNING *`,
         [
           req.user!.id,
@@ -148,6 +291,7 @@ router.post(
           file.size,
           file.mimetype,
           thumbnailPath,
+          htmlEntryPath,
           isPublic
         ]
       );
@@ -168,6 +312,7 @@ router.post(
           fileSize: artwork.file_size,
           mimeType: artwork.mime_type,
           thumbnailPath: artwork.thumbnail_path,
+          htmlEntryPath: artwork.html_entry_path,
           isPublic: !!artwork.is_public,
           createdAt: artwork.created_at
         }
@@ -205,6 +350,7 @@ router.get(
         fileSize: artwork.file_size,
         mimeType: artwork.mime_type,
         thumbnailPath: artwork.thumbnail_path,
+        htmlEntryPath: artwork.html_entry_path,
         isPublic: !!artwork.is_public,
         createdAt: artwork.created_at
       }));
@@ -259,6 +405,7 @@ router.get(
         fileSize: artwork.file_size,
         mimeType: artwork.mime_type,
         thumbnailPath: artwork.thumbnail_path,
+        htmlEntryPath: artwork.html_entry_path,
         isPublic: !!artwork.is_public,
         createdAt: artwork.created_at
       }));
@@ -282,7 +429,7 @@ router.delete(
 
       // 检查作品是否存在且属于当前用户
       const checkResult = await pool.query(
-        'SELECT file_path, thumbnail_path FROM artworks WHERE id = $1 AND student_id = $2',
+        'SELECT file_path, thumbnail_path, html_entry_path FROM artworks WHERE id = $1 AND student_id = $2',
         [id, req.user!.id]
       );
 
@@ -294,6 +441,7 @@ router.delete(
       const row = checkResult.rows[0];
       const filePath = row.file_path;
       const thumbPath = row.thumbnail_path;
+      const htmlEntryPath = row.html_entry_path;
 
       // 从数据库删除
       await pool.query('DELETE FROM artworks WHERE id = $1', [id]);
@@ -310,6 +458,11 @@ router.delete(
         if (fs.existsSync(fullThumbPath)) {
           try { fs.unlinkSync(fullThumbPath); } catch { /* noop */ }
         }
+      }
+
+      const htmlProjectDir = getHtmlProjectDir(htmlEntryPath);
+      if (htmlProjectDir) {
+        safeDeleteDirectory(htmlProjectDir);
       }
 
       res.json({ message: '作品删除成功' });

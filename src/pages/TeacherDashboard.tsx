@@ -18,7 +18,7 @@ export const TeacherDashboard: React.FC = () => {
   }, [fetchAllArtworks, fetchStudents]);
   
   const stats = {
-    totalStudents: new Set(artworks.map(a => a.studentId)).size,
+    totalStudents: students.length,
     totalWorks: artworks.length,
     images: artworks.filter(w => w.type === 'image').length,
     videos: artworks.filter(w => w.type === 'video').length,

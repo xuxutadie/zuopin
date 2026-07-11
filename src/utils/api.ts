@@ -86,6 +86,8 @@ export interface ArtworkApiItem {
   file_path?: string;
   thumbnailPath?: string | null;
   thumbnail_path?: string | null;
+  htmlEntryPath?: string | null;
+  html_entry_path?: string | null;
   isPublic?: boolean;
   is_public?: boolean;
   fileSize?: number;
@@ -284,8 +286,15 @@ export const artworkApi = {
 
   // 获取单个 HTML 文件的分享链接
   getHtmlShareUrl: (storedFilename: string, originalFileName: string) => {
-    const normalizedName = originalFileName.toLowerCase();
-    if (!normalizedName.endsWith('.html') && !normalizedName.endsWith('.htm')) {
+    const normalizedOriginalName = originalFileName.toLowerCase();
+    const normalizedStoredName = storedFilename.toLowerCase();
+    const isHtmlEntry =
+      normalizedOriginalName.endsWith('.html') ||
+      normalizedOriginalName.endsWith('.htm') ||
+      normalizedStoredName.endsWith('.html') ||
+      normalizedStoredName.endsWith('.htm');
+
+    if (!isHtmlEntry) {
       return undefined;
     }
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Artwork } from '../types';
-import { FileImage, FileVideo, FileCode, Calendar, Download, Trash2, Eye, X, Link2, ExternalLink, Globe2 } from 'lucide-react';
+import { FileImage, FileVideo, FileCode, Calendar, Download, Trash2, Eye, X, Link2, ExternalLink, Globe2, QrCode } from 'lucide-react';
 import { formatFileSize } from '../utils/fileHelper';
 import { downloadSingleFile, previewHtmlWork } from '../utils/downloadHelper';
 
@@ -73,6 +73,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
   const [linkCopied, setLinkCopied] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [htmlPreviewError, setHtmlPreviewError] = useState(false);
+  const [showQrCode, setShowQrCode] = useState(false);
 
   const Icon = getTypeIcon(artwork.type);
 
@@ -117,6 +118,9 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
   const canTogglePublic = showPublicToggle && !!onTogglePublic;
   const htmlPreviewUrl = artwork.type === 'html' ? artwork.shareUrl || artwork.fileData : '';
   const canShowHtmlPreview = artwork.type === 'html' && !!htmlPreviewUrl && !htmlPreviewError;
+  const qrCodeUrl = artwork.shareUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(artwork.shareUrl)}`
+    : '';
 
   return (
     <>
@@ -349,6 +353,16 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
                     <ExternalLink className="w-4 h-4" />
                     <span>打开链接</span>
                   </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowQrCode(true);
+                    }}
+                    className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-purple-300 transition-colors hover:bg-purple-500/10"
+                  >
+                    <QrCode className="w-4 h-4" />
+                    <span>二维码</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -387,6 +401,48 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
                 className="max-w-full max-h-[90vh] rounded-lg"
               />
             )}
+          </div>
+        </div>
+      )}
+
+      {showQrCode && canShareHtml && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowQrCode(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl border border-white/10 bg-slate-950 p-6 text-center shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">作品访问二维码</h3>
+              <button
+                onClick={() => setShowQrCode(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mx-auto mb-4 flex h-60 w-60 items-center justify-center rounded-xl bg-white p-4">
+              <img
+                src={qrCodeUrl}
+                alt={`${artwork.title} 二维码`}
+                className="h-full w-full"
+              />
+            </div>
+            <p className="mb-4 break-all text-xs text-slate-300">{artwork.shareUrl}</p>
+            <button
+              onClick={() => {
+                if (artwork.shareUrl) {
+                  void navigator.clipboard.writeText(artwork.shareUrl);
+                  setLinkCopied(true);
+                  window.setTimeout(() => setLinkCopied(false), 2000);
+                }
+              }}
+              className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+            >
+              {linkCopied ? '链接已复制' : '复制访问链接'}
+            </button>
           </div>
         </div>
       )}

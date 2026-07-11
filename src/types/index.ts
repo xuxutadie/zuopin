@@ -34,6 +34,7 @@ export interface Artwork {
   createdAt: number;
   thumbnail?: string;         // 缩略图 URL，所有类型作品都统一使用
   thumbnailPath?: string | null; // 原始返回的 thumbnail_path，便于调试
+  htmlEntryPath?: string | null; // 静态网站 ZIP 解压后的入口页面路径
   isPublic?: boolean;          // 是否在作品广场公开
   shareUrl?: string;            // HTML 作品分享链接（直接打开文件）
 }

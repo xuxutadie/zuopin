@@ -109,7 +109,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
               <p className={clsx('mt-1 text-sm', isLight ? 'text-slate-600' : 'text-slate-400')}>
                 {type === 'image' && '支持 JPG、PNG、GIF、WebP 格式，最大 10MB'}
                 {type === 'video' && '支持 MP4、WebM 格式，最大 50MB'}
-                {type === 'html' && '支持 .html、.htm 或 ZIP 压缩包，最大 20MB'}
+                {type === 'html' && '支持单个 HTML 文件，或包含 index.html 的静态网站 ZIP 包，最大 20MB'}
               </p>
             </div>
           </div>

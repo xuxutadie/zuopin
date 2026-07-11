@@ -64,7 +64,10 @@ interface ArtworkState {
 function mapArtwork(a: ArtworkApiItem): Artwork {
   // 缩略图 URL：优先使用 thumbnail_path，否则 image 类型使用 file_path
   const thumbFile = a.thumbnailPath || a.thumbnail_path;
-  const fileForThumb = thumbFile || (a.type === 'image' ? a.filePath || a.file_path : null);
+  const filePath = a.filePath || a.file_path;
+  const htmlEntryPath = a.htmlEntryPath || a.html_entry_path || null;
+  const htmlPreviewPath = htmlEntryPath || filePath;
+  const fileForThumb = thumbFile || (a.type === 'image' ? filePath : null);
   const thumbnailUrl = fileForThumb ? artworkApi.getFileUrl(fileForThumb) : undefined;
 
   return {
@@ -75,10 +78,11 @@ function mapArtwork(a: ArtworkApiItem): Artwork {
     description: a.description || '',
     type: a.type,
     fileName: a.fileName || a.file_name,
-    fileData: artworkApi.getFileUrl(a.filePath || a.file_path),
-    shareUrl: artworkApi.getHtmlShareUrl(a.filePath || a.file_path, a.fileName || a.file_name),
+    fileData: artworkApi.getFileUrl(filePath),
+    shareUrl: artworkApi.getHtmlShareUrl(htmlPreviewPath, a.fileName || a.file_name),
     thumbnail: thumbnailUrl,
     thumbnailPath: a.thumbnailPath || a.thumbnail_path || null,
+    htmlEntryPath,
     isPublic: typeof a.isPublic === 'boolean' ? a.isPublic : !!a.is_public,
     fileSize: a.fileSize || a.file_size,
     mimeType: a.mimeType || a.mime_type,
