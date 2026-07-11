@@ -122,35 +122,43 @@ async function readResponseData(response: Response): Promise<unknown> {
   }
 }
 
+interface ApiRequestOptions extends RequestInit {
+  skipAuth?: boolean;
+  skipAuthExpiredRedirect?: boolean;
+}
+
 // 通用请求函数
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: ApiRequestOptions = {}
 ): Promise<ApiResponse<T>> {
   const token = getToken();
+  const { skipAuth, skipAuthExpiredRedirect, ...fetchOptions } = options;
   const headers = new Headers(options.headers);
 
   if (!(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
 
-  if (token) {
+  if (token && !skipAuth) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
+      ...fetchOptions,
       headers
     });
 
     const data = await readResponseData(response);
 
     if (!response.ok) {
-      handleAuthExpired(response, data);
+      if (!skipAuthExpiredRedirect) {
+        handleAuthExpired(response, data);
+      }
       return {
           success: false,
-          error: isAuthExpired(response, data)
+          error: !skipAuthExpiredRedirect && isAuthExpired(response, data)
             ? '登录已失效，请重新登录'
             : getResponseError(data) || `请求失败（${response.status}）`
       };
@@ -178,6 +186,8 @@ export const authApi = {
       token: string;
     }>('/auth/register', {
       method: 'POST',
+      skipAuth: true,
+      skipAuthExpiredRedirect: true,
       body: JSON.stringify({ name, role: 'student', password })
     });
   },
@@ -189,6 +199,8 @@ export const authApi = {
       token: string;
     }>('/auth/login', {
       method: 'POST',
+      skipAuth: true,
+      skipAuthExpiredRedirect: true,
       body: JSON.stringify({ name, role, password })
     });
   }
