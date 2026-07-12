@@ -125,7 +125,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
   return (
     <>
       <div className={`
-        overflow-hidden rounded-xl border border-white/10 bg-slate-950/80 shadow-md shadow-black/30
+        flex h-full flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-950/80 shadow-md shadow-black/30
         transition-all duration-300 hover:-translate-y-1 hover:border-blue-400/40 hover:shadow-xl hover:shadow-blue-950/30
         ${selectable ? 'cursor-pointer' : ''}
         ${selected ? 'ring-2 ring-blue-500' : ''}
@@ -138,7 +138,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
       >
         {/* 预览区域：统一使用缩略图 */}
         <div
-          className="relative h-48 cursor-pointer overflow-hidden"
+          className="relative aspect-[4/3] w-full shrink-0 cursor-pointer overflow-hidden"
           style={{ background: hasThumbnail ? '#0f172a' : getPlaceholderGradient(artwork.type) }}
           onClick={handlePreview}
         >
@@ -237,31 +237,24 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
         </div>
 
         {/* 内容区域 */}
-        <div className="p-4">
-          <h3 className="mb-2 line-clamp-2 font-semibold text-white">
+        <div className="flex flex-1 flex-col p-4">
+          <h3 className="mb-1 line-clamp-2 min-h-12 font-semibold leading-6 text-white">
             {artwork.title}
           </h3>
           
           {showStudent && (
-            <p className="mb-2 text-sm text-slate-300">
+            <p className="mb-1 truncate text-sm text-slate-300">
               作者：{artwork.studentName}
             </p>
           )}
           
           {artwork.description && (
-            <p className="mb-3 line-clamp-2 text-sm text-slate-400">
+            <p className="mb-2 line-clamp-1 text-sm text-slate-400">
               {artwork.description}
             </p>
           )}
 
-          {canShareHtml && (
-            <div className="mb-3 rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-2">
-              <p className="text-xs font-medium text-cyan-200">公开分享链接</p>
-              <p className="mt-1 truncate text-xs text-slate-300">{artwork.shareUrl}</p>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between text-xs text-slate-400">
+          <div className="mt-auto flex items-center justify-between text-xs text-slate-400">
             <div className="flex items-center space-x-1">
               <Calendar className="w-3 h-3" />
               <span>{new Date(artwork.createdAt).toLocaleDateString()}</span>
@@ -295,51 +288,49 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
                   </span>
                 </button>
               )}
-              <div className="flex items-center space-x-2">
+              <div className="grid grid-cols-5 gap-1" role="toolbar" aria-label="作品操作">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handlePreview();
                   }}
-                  className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-blue-300 transition-colors hover:bg-blue-500/10"
+                  type="button"
+                  title="预览作品"
+                  aria-label="预览作品"
+                  className="group relative flex h-10 items-center justify-center rounded-md text-blue-300 transition-colors hover:bg-blue-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 >
                   <Eye className="w-4 h-4" />
-                  <span>预览</span>
+                  <span className="sr-only">预览作品</span>
+                  <span className="pointer-events-none absolute -top-9 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded bg-slate-800 px-2 py-1 text-xs text-white shadow-lg group-hover:block group-focus-visible:block">预览</span>
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDownload();
                   }}
-                  className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-green-300 transition-colors hover:bg-green-500/10"
+                  type="button"
+                  title="下载作品"
+                  aria-label="下载作品"
+                  className="group relative flex h-10 items-center justify-center rounded-md text-green-300 transition-colors hover:bg-green-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
                 >
                   <Download className="w-4 h-4" />
-                  <span>下载</span>
+                  <span className="sr-only">下载作品</span>
+                  <span className="pointer-events-none absolute -top-9 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded bg-slate-800 px-2 py-1 text-xs text-white shadow-lg group-hover:block group-focus-visible:block">下载</span>
                 </button>
-                {onDelete && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete();
-                    }}
-                    className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-red-300 transition-colors hover:bg-red-500/10"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span>删除</span>
-                  </button>
-                )}
-              </div>
-              {canShareHtml && (
-                <div className="mt-2 flex items-center space-x-2">
-                  <button
+                <button
                     onClick={(e) => {
                       e.stopPropagation();
                       void handleCopyShareLink();
                     }}
-                    className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-cyan-300 transition-colors hover:bg-cyan-500/10"
+                    type="button"
+                    title={canShareHtml ? '复制访问链接' : '此作品没有访问链接'}
+                    aria-label={canShareHtml ? '复制访问链接' : '此作品没有访问链接'}
+                    disabled={!canShareHtml}
+                    className="group relative flex h-10 items-center justify-center rounded-md text-cyan-300 transition-colors hover:bg-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:cursor-not-allowed disabled:text-slate-600 disabled:hover:bg-transparent"
                   >
                     <Link2 className="w-4 h-4" />
-                    <span>{linkCopied ? '已复制' : '复制链接'}</span>
+                    <span className="sr-only">{linkCopied ? '链接已复制' : '复制访问链接'}</span>
+                    <span className="pointer-events-none absolute -top-9 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded bg-slate-800 px-2 py-1 text-xs text-white shadow-lg group-hover:block group-focus-visible:block">{linkCopied ? '已复制' : '复制链接'}</span>
                   </button>
                   <button
                     onClick={(e) => {
@@ -348,22 +339,44 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
                         window.open(artwork.shareUrl, '_blank', 'noopener,noreferrer');
                       }
                     }}
-                    className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-indigo-300 transition-colors hover:bg-indigo-500/10"
+                    type="button"
+                    title={canShareHtml ? '在新窗口打开' : '此作品没有访问链接'}
+                    aria-label={canShareHtml ? '在新窗口打开' : '此作品没有访问链接'}
+                    disabled={!canShareHtml}
+                    className="group relative flex h-10 items-center justify-center rounded-md text-indigo-300 transition-colors hover:bg-indigo-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:cursor-not-allowed disabled:text-slate-600 disabled:hover:bg-transparent"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    <span>打开链接</span>
+                    <span className="sr-only">在新窗口打开</span>
+                    <span className="pointer-events-none absolute -top-9 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded bg-slate-800 px-2 py-1 text-xs text-white shadow-lg group-hover:block group-focus-visible:block">打开链接</span>
                   </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowQrCode(true);
                     }}
-                    className="flex-1 flex items-center justify-center space-x-1 rounded-lg px-3 py-1.5 text-sm text-purple-300 transition-colors hover:bg-purple-500/10"
+                    type="button"
+                    title={canShareHtml ? '查看访问二维码' : '此作品没有访问链接'}
+                    aria-label={canShareHtml ? '查看访问二维码' : '此作品没有访问链接'}
+                    disabled={!canShareHtml}
+                    className="group relative flex h-10 items-center justify-center rounded-md text-purple-300 transition-colors hover:bg-purple-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 disabled:cursor-not-allowed disabled:text-slate-600 disabled:hover:bg-transparent"
                   >
                     <QrCode className="w-4 h-4" />
-                    <span>二维码</span>
+                    <span className="sr-only">查看访问二维码</span>
+                    <span className="pointer-events-none absolute -top-9 right-0 z-20 hidden whitespace-nowrap rounded bg-slate-800 px-2 py-1 text-xs text-white shadow-lg group-hover:block group-focus-visible:block">二维码</span>
                   </button>
-                </div>
+              </div>
+              {onDelete && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete();
+                  }}
+                  type="button"
+                  className="mt-2 flex w-full items-center justify-center space-x-1 rounded-md px-3 py-2 text-sm text-red-300 transition-colors hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>删除作品</span>
+                </button>
               )}
             </div>
           )}
