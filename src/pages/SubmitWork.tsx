@@ -9,8 +9,9 @@ import { FileUpload } from '../components/FileUpload';
 import { useAuthStore } from '../stores/authStore';
 import { useArtworkStore } from '../stores/artworkStore';
 import { validateFileSize, validateFileType } from '../utils/fileHelper';
-import { ArrowLeft, FileImage, FileVideo, FileCode, CheckCircle, Link2, ExternalLink, Upload, X, Sparkles, Globe } from 'lucide-react';
+import { ArrowLeft, FileImage, FileVideo, FileCode, UserRound, CheckCircle, Link2, ExternalLink, Upload, X, Sparkles, Globe } from 'lucide-react';
 import { clsx } from 'clsx';
+import { ArtworkType } from '../types';
 
 // 判断文件是否为图片（用于缩略图验证）
 function isImageFile(file: File): boolean {
@@ -24,7 +25,7 @@ export const SubmitWork: React.FC = () => {
   const { currentUser } = useAuthStore();
   const { submitArtwork } = useArtworkStore();
   
-  const [workType, setWorkType] = useState<'image' | 'video' | 'html'>('image');
+  const [workType, setWorkType] = useState<ArtworkType>('image');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -49,7 +50,9 @@ export const SubmitWork: React.FC = () => {
       setFileError(
         workType === 'html'
           ? '网页作品仅支持 .html、.htm 或 ZIP 压缩包'
-          : '所选文件类型与当前作品类型不匹配'
+          : workType === 'homepage'
+            ? '个人主页仅支持 ZIP 压缩包'
+            : '所选文件类型与当前作品类型不匹配'
       );
       return;
     }
@@ -60,7 +63,9 @@ export const SubmitWork: React.FC = () => {
           ? '图片大小不能超过 10MB'
           : workType === 'video'
             ? '视频大小不能超过 50MB'
-            : '网页作品文件大小不能超过 20MB'
+            : workType === 'homepage'
+              ? '个人主页 ZIP 不能超过 100MB'
+              : '网页作品文件大小不能超过 20MB'
       );
       return;
     }
@@ -179,6 +184,14 @@ export const SubmitWork: React.FC = () => {
       activeClassName: 'border-purple-500 bg-purple-50',
       activeIconClassName: 'text-purple-600',
       activeTextClassName: 'text-purple-700'
+    },
+    {
+      value: 'homepage',
+      label: '个人主页',
+      icon: UserRound,
+      activeClassName: 'border-cyan-500 bg-cyan-50',
+      activeIconClassName: 'text-cyan-600',
+      activeTextClassName: 'text-cyan-700'
     }
   ] as const;
   const lightCardClassName = '!border-slate-200 !bg-white !text-slate-900 shadow-lg shadow-black/20';
@@ -267,7 +280,7 @@ export const SubmitWork: React.FC = () => {
                 <label className="mb-3 block text-sm font-semibold text-slate-700">
                   选择作品类型
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {typeOptions.map((option) => {
                     const Icon = option.icon;
                     return (
@@ -329,9 +342,14 @@ export const SubmitWork: React.FC = () => {
                     可上传单个 `.html` / `.htm` 网页文件，或包含完整网页资源的 ZIP 压缩包。
                   </p>
                 )}
+                {workType === 'homepage' && (
+                  <p className="mt-2 text-sm text-slate-600">
+                    请将包含 `index.html`、样式、脚本、图片和视频等完整资源的个人网站压缩为 ZIP。
+                  </p>
+                )}
               </div>
 
-              {/* 封面缩略图上传（HTML/视频类型才需要，图片类型可以用自身做缩略图） */}
+              {/* 封面缩略图上传（网页/视频类型使用，图片类型可直接使用作品本身） */}
               {workType !== 'image' && (
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-700">

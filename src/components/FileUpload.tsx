@@ -1,9 +1,10 @@
 import React, { useCallback } from 'react';
-import { Upload, X, FileImage, FileVideo, FileCode } from 'lucide-react';
+import { Upload, X, FileImage, FileVideo, FileCode, UserRound } from 'lucide-react';
 import { clsx } from 'clsx';
+import { ArtworkType } from '../types';
 
 interface FileUploadProps {
-  type: 'image' | 'video' | 'html';
+  type: ArtworkType;
   file: File | null;
   onFileSelect: (file: File) => void;
   onFileRemove: () => void;
@@ -52,19 +53,22 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const acceptTypes = {
     image: 'image/jpeg,image/png,image/gif,image/webp',
     video: 'video/mp4,video/webm',
-    html: '.html,.htm,.zip,text/html,application/zip,application/x-zip-compressed'
+    html: '.html,.htm,.zip,text/html,application/zip,application/x-zip-compressed',
+    homepage: '.zip,application/zip,application/x-zip-compressed'
   };
 
   const typeLabels = {
     image: '图片',
     video: '视频',
-    html: 'HTML'
+    html: 'HTML',
+    homepage: '个人主页 ZIP'
   };
 
   const typeIcons = {
     image: FileImage,
     video: FileVideo,
-    html: FileCode
+    html: FileCode,
+    homepage: UserRound
   };
 
   const Icon = typeIcons[type];
@@ -110,6 +114,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 {type === 'image' && '支持 JPG、PNG、GIF、WebP 格式，最大 10MB'}
                 {type === 'video' && '支持 MP4、WebM 格式，最大 50MB'}
                 {type === 'html' && '支持单个 HTML 文件，或包含 index.html 的静态网站 ZIP 包，最大 20MB'}
+                {type === 'homepage' && '支持包含 index.html 的个人主页 ZIP 包，最大 100MB'}
               </p>
             </div>
           </div>

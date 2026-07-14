@@ -6,7 +6,7 @@ import { Button } from '../components/Button';
 import { Card, CardTitle, CardContent } from '../components/Card';
 import { useAuthStore } from '../stores/authStore';
 import { useArtworkStore } from '../stores/artworkStore';
-import { FileImage, FileVideo, FileCode, Upload, FolderOpen } from 'lucide-react';
+import { FileImage, FileVideo, FileCode, UserRound, Upload, FolderOpen } from 'lucide-react';
 
 export const StudentDashboard: React.FC = () => {
   const { currentUser } = useAuthStore();
@@ -22,7 +22,8 @@ export const StudentDashboard: React.FC = () => {
     total: myWorks.length,
     images: myWorks.filter(w => w.type === 'image').length,
     videos: myWorks.filter(w => w.type === 'video').length,
-    htmls: myWorks.filter(w => w.type === 'html').length
+    htmls: myWorks.filter(w => w.type === 'html').length,
+    homepages: myWorks.filter(w => w.type === 'homepage').length
   };
 
   return (
@@ -42,7 +43,7 @@ export const StudentDashboard: React.FC = () => {
           </div>
 
           {/* 统计卡片 */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-5">
             <Card className="text-center">
               <div className="text-3xl font-bold text-blue-600 mb-1">
                 {workStats.total}
@@ -66,6 +67,12 @@ export const StudentDashboard: React.FC = () => {
                 {workStats.htmls}
               </div>
               <div className="text-sm text-slate-400">网页作品</div>
+            </Card>
+            <Card className="text-center">
+              <div className="mb-1 text-3xl font-bold text-cyan-500">
+                {workStats.homepages}
+              </div>
+              <div className="text-sm text-slate-400">个人主页</div>
             </Card>
           </div>
 
@@ -109,7 +116,7 @@ export const StudentDashboard: React.FC = () => {
           {/* 功能介绍 */}
           <Card>
             <CardTitle className="mb-4">支持的作品类型</CardTitle>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-lg border border-blue-400/20 bg-blue-500/10 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <FileImage className="w-5 h-5 text-blue-600" />
@@ -135,6 +142,15 @@ export const StudentDashboard: React.FC = () => {
                 </div>
                 <p className="text-sm text-slate-400">
                   HTML 或 ZIP 格式，最大 20MB
+                </p>
+              </div>
+              <div className="rounded-lg border border-cyan-400/20 bg-cyan-500/10 p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <UserRound className="w-5 h-5 text-cyan-500" />
+                  <span className="font-medium text-slate-100">个人主页</span>
+                </div>
+                <p className="text-sm text-slate-400">
+                  静态网站 ZIP，最大 100MB，解压后最大 200MB
                 </p>
               </div>
             </div>

@@ -4,10 +4,10 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { ArtworkCard } from '../components/ArtworkCard';
 import { useArtworkStore } from '../stores/artworkStore';
-import { Sparkles, Search, FileImage, FileVideo, FileCode, RefreshCw, Calendar, type LucideIcon } from 'lucide-react';
+import { Sparkles, Search, FileImage, FileVideo, FileCode, UserRound, RefreshCw, Calendar, type LucideIcon } from 'lucide-react';
 import { clsx } from 'clsx';
 
-type FilterType = 'all' | 'image' | 'video' | 'html';
+type FilterType = 'all' | 'image' | 'video' | 'html' | 'homepage';
 
 export const Gallery: React.FC = () => {
   const navigate = useNavigate();
@@ -40,7 +40,8 @@ export const Gallery: React.FC = () => {
     { value: 'all', label: '全部作品', icon: Sparkles },
     { value: 'image', label: '图片作品', icon: FileImage },
     { value: 'video', label: '视频作品', icon: FileVideo },
-    { value: 'html', label: 'HTML 作品', icon: FileCode }
+    { value: 'html', label: 'HTML 作品', icon: FileCode },
+    { value: 'homepage', label: '个人主页', icon: UserRound }
   ];
 
   return (
@@ -89,7 +90,7 @@ export const Gallery: React.FC = () => {
       {/* 统计信息 */}
       <section className="px-4 pb-2">
         <div className="container mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             {filterOptions.map((opt) => {
               const Icon = opt.icon;
               const count = opt.value === 'all'

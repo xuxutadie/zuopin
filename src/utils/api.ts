@@ -79,7 +79,7 @@ export interface ArtworkApiItem {
   student_name?: string;
   title: string;
   description?: string | null;
-  type: 'image' | 'video' | 'html';
+  type: 'image' | 'video' | 'html' | 'homepage';
   fileName?: string;
   file_name?: string;
   filePath?: string;
@@ -107,6 +107,7 @@ export interface StudentSummaryItem {
   imageCount: number;
   videoCount: number;
   htmlCount: number;
+  homepageCount: number;
   lastSubmittedAt: string | null;
 }
 
@@ -408,6 +409,7 @@ export const adminApi = {
         image: number;
         video: number;
         html: number;
+        homepage: number;
       };
     }>('/admin/artworks/stats');
   }

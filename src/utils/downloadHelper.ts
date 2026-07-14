@@ -79,7 +79,12 @@ export function createPreviewUrl(artwork: Artwork): string {
 
 // 打开HTML作品预览
 export function previewHtmlWork(artwork: Artwork): void {
-  if (artwork.type !== 'html') return;
+  if (artwork.type !== 'html' && artwork.type !== 'homepage') return;
+
+  if (artwork.shareUrl) {
+    window.open(artwork.shareUrl, '_blank', 'noopener,noreferrer');
+    return;
+  }
 
   const fileName = artwork.fileName.toLowerCase();
   if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
@@ -87,5 +92,5 @@ export function previewHtmlWork(artwork: Artwork): void {
     return;
   }
 
-  alert('ZIP 网页作品请先下载后在本地解压预览。');
+  alert('该静态网站暂时没有可用的在线预览入口。');
 }

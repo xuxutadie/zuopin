@@ -22,7 +22,7 @@ interface ArtworkRow {
   student_name: string;
   title: string;
   description: string | null;
-  type: 'image' | 'video' | 'html';
+  type: 'image' | 'video' | 'html' | 'homepage';
   file_name: string;
   file_path: string;
   file_size: number;
@@ -36,6 +36,7 @@ interface ArtworkRow {
 const HTML_PROJECT_ROOT = 'html-projects';
 const MAX_HTML_PROJECT_FILES = 300;
 const MAX_HTML_PROJECT_SIZE = 100 * 1024 * 1024;
+const MAX_HOMEPAGE_PROJECT_SIZE = 200 * 1024 * 1024;
 
 // 配置文件上传（同时接收作品文件 file 和可选的缩略图 thumbnail）
 const storage = multer.diskStorage({
@@ -50,7 +51,8 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: {
-    fileSize: 50 * 1024 * 1024 // 最大50MB
+    // 个人主页 ZIP 最大 100MB，具体类型限制在上传后继续校验。
+    fileSize: 100 * 1024 * 1024
   }
 });
 
@@ -122,7 +124,11 @@ function getHtmlProjectDir(htmlEntryPath: string | null): string | null {
   return resolveUploadPath(`${HTML_PROJECT_ROOT}/${projectId}`);
 }
 
-function extractHtmlProject(file: Express.Multer.File, projectId: string): string {
+function extractHtmlProject(
+  file: Express.Multer.File,
+  projectId: string,
+  maxProjectSize: number
+): string {
   const zip = new AdmZip(file.path);
   const entries = zip.getEntries();
   const files = entries.filter(entry => !entry.isDirectory);
@@ -143,8 +149,9 @@ function extractHtmlProject(file: Express.Multer.File, projectId: string): strin
     totalSize += entry.header.size;
   }
 
-  if (totalSize > MAX_HTML_PROJECT_SIZE) {
-    throw new Error('ZIP 解压后文件总大小不能超过 100MB');
+  if (totalSize > maxProjectSize) {
+    const maxSizeMb = Math.floor(maxProjectSize / (1024 * 1024));
+    throw new Error(`ZIP 解压后文件总大小不能超过 ${maxSizeMb}MB`);
   }
 
   const entryName = findHtmlEntry(entries);
@@ -203,7 +210,7 @@ router.post(
       }
 
       // 验证作品类型
-      if (!['image', 'video', 'html'].includes(type)) {
+      if (!['image', 'video', 'html', 'homepage'].includes(type)) {
         fs.unlinkSync(file.path);
         res.status(400).json({ error: '无效的作品类型' });
         return;
@@ -242,15 +249,18 @@ router.post(
         thumbnailPath = file.filename;
       }
 
-      // HTML 作品入口：单个 HTML 文件直接访问；ZIP 静态网站先解压并寻找入口文件。
+      // 网页作品入口：单个 HTML 文件直接访问；ZIP 静态网站先解压并寻找入口文件。
       let htmlEntryPath: string | null = null;
       let htmlProjectDir: string | null = null;
-      if (type === 'html') {
+      if (type === 'html' || type === 'homepage') {
         if (isZipFile(file)) {
           const projectId = uuidv4();
           htmlProjectDir = resolveUploadPath(`${HTML_PROJECT_ROOT}/${projectId}`);
           try {
-            htmlEntryPath = extractHtmlProject(file, projectId);
+            const maxProjectSize = type === 'homepage'
+              ? MAX_HOMEPAGE_PROJECT_SIZE
+              : MAX_HTML_PROJECT_SIZE;
+            htmlEntryPath = extractHtmlProject(file, projectId, maxProjectSize);
           } catch (error) {
             fs.unlinkSync(file.path);
             if (thumbFile) {
@@ -376,7 +386,7 @@ router.get(
       let paramIndex = 1;
 
       // 按类型筛选
-      if (['image', 'video', 'html'].includes(typeValue)) {
+      if (['image', 'video', 'html', 'homepage'].includes(typeValue)) {
         query += ` AND type = $${paramIndex}`;
         params.push(typeValue);
         paramIndex++;

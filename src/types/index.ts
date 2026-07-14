@@ -6,6 +6,8 @@ export interface User {
   createdAt: number;
 }
 
+export type ArtworkType = 'image' | 'video' | 'html' | 'homepage';
+
 // 老师端学生明细
 export interface StudentSummary {
   id: string;
@@ -16,6 +18,7 @@ export interface StudentSummary {
   imageCount: number;
   videoCount: number;
   htmlCount: number;
+  homepageCount: number;
   lastSubmittedAt: string | null;
 }
 
@@ -26,7 +29,7 @@ export interface Artwork {
   studentName: string;
   title: string;
   description: string;
-  type: 'image' | 'video' | 'html';
+  type: ArtworkType;
   fileName: string;
   fileData: string;
   fileSize: number;
@@ -43,13 +46,13 @@ export interface Artwork {
 export interface ArtworkFormData {
   title: string;
   description: string;
-  type: 'image' | 'video' | 'html';
+  type: ArtworkType;
   file: File | null;
 }
 
 // 筛选条件
 export interface FilterOptions {
-  type?: 'image' | 'video' | 'html';
+  type?: ArtworkType;
   search?: string;
   studentName?: string;
 }

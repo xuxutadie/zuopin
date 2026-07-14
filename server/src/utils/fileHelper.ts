@@ -4,28 +4,31 @@ import path from 'path';
 export const FILE_TYPE_MAP = {
   image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   video: ['video/mp4', 'video/webm'],
-  html: ['text/html', 'application/zip', 'application/x-zip-compressed']
+  html: ['text/html', 'application/zip', 'application/x-zip-compressed'],
+  homepage: ['application/zip', 'application/x-zip-compressed']
 };
 
 // 文件大小限制（字节）
 export const FILE_SIZE_LIMITS = {
   image: 10 * 1024 * 1024, // 10MB
   video: 50 * 1024 * 1024, // 50MB
-  html: 20 * 1024 * 1024   // 20MB
+  html: 20 * 1024 * 1024,      // 20MB
+  homepage: 100 * 1024 * 1024 // 100MB
 };
 
 // 文件扩展名映射
 export const FILE_EXTENSIONS = {
   image: ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
   video: ['.mp4', '.webm'],
-  html: ['.html', '.htm', '.zip']
+  html: ['.html', '.htm', '.zip'],
+  homepage: ['.zip']
 };
 
 // 验证文件类型
 export function validateFileType(
   mimeType: string,
   filename: string,
-  type: 'image' | 'video' | 'html'
+  type: 'image' | 'video' | 'html' | 'homepage'
 ): boolean {
   const extension = getFileExtension(filename);
   return FILE_TYPE_MAP[type].includes(mimeType) || FILE_EXTENSIONS[type].includes(extension);
@@ -34,7 +37,7 @@ export function validateFileType(
 // 验证文件大小
 export function validateFileSize(
   size: number,
-  type: 'image' | 'video' | 'html'
+  type: 'image' | 'video' | 'html' | 'homepage'
 ): boolean {
   return size <= FILE_SIZE_LIMITS[type];
 }

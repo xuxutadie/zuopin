@@ -22,7 +22,8 @@ export const TeacherDashboard: React.FC = () => {
     totalWorks: artworks.length,
     images: artworks.filter(w => w.type === 'image').length,
     videos: artworks.filter(w => w.type === 'video').length,
-    htmls: artworks.filter(w => w.type === 'html').length
+    htmls: artworks.filter(w => w.type === 'html').length,
+    homepages: artworks.filter(w => w.type === 'homepage').length
   };
   const lightCardClassName = '!border-slate-200 !bg-white !text-slate-900 shadow-lg shadow-black/20';
 
@@ -63,7 +64,7 @@ export const TeacherDashboard: React.FC = () => {
           </div>
 
           {/* 统计卡片 */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+          <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
             <Card className={`${lightCardClassName} text-center`}>
               <div className="text-3xl font-bold text-blue-600 mb-1">
                 {stats.totalStudents}
@@ -93,6 +94,12 @@ export const TeacherDashboard: React.FC = () => {
                 {stats.htmls}
               </div>
               <div className="text-sm font-medium text-slate-600">网页作品</div>
+            </Card>
+            <Card className={`${lightCardClassName} text-center`}>
+              <div className="mb-1 text-3xl font-bold text-cyan-600">
+                {stats.homepages}
+              </div>
+              <div className="text-sm font-medium text-slate-600">个人主页</div>
             </Card>
           </div>
 
@@ -170,7 +177,7 @@ export const TeacherDashboard: React.FC = () => {
                         <td className="py-3 pr-4">
                           <div className="font-medium text-slate-900">共 {student.workCount} 个</div>
                           <div className="mt-1 text-xs text-slate-500">
-                            图片 {student.imageCount} / 视频 {student.videoCount} / HTML {student.htmlCount}
+                            图片 {student.imageCount} / 视频 {student.videoCount} / HTML {student.htmlCount} / 主页 {student.homepageCount}
                           </div>
                         </td>
                         <td className="py-3 pr-4 text-slate-600">

@@ -5,9 +5,9 @@ import { Footer } from '../components/Footer';
 import { Button } from '../components/Button';
 import { ArtworkCard } from '../components/ArtworkCard';
 import { useArtworkStore } from '../stores/artworkStore';
-import { ArrowLeft, Search, Download, X, FileImage, FileVideo, FileCode } from 'lucide-react';
+import { ArrowLeft, Search, Download, X, FileImage, FileVideo, FileCode, UserRound } from 'lucide-react';
 import { clsx } from 'clsx';
-import { Artwork, FilterOptions } from '../types';
+import { Artwork, ArtworkType, FilterOptions } from '../types';
 
 export const WorksOverview: React.FC = () => {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ export const WorksOverview: React.FC = () => {
 
   const artworks = filterArtworks({ ...filters, search: searchTerm });
 
-  const handleFilterChange = (type?: 'image' | 'video' | 'html') => {
+  const handleFilterChange = (type?: ArtworkType) => {
     setFilters(prev => ({ ...prev, type: prev.type === type ? undefined : type }));
   };
 
@@ -101,7 +101,8 @@ export const WorksOverview: React.FC = () => {
   const typeFilters = [
     { value: 'image', label: '图片', icon: FileImage, count: filterArtworks({ type: 'image' }).length },
     { value: 'video', label: '视频', icon: FileVideo, count: filterArtworks({ type: 'video' }).length },
-    { value: 'html', label: '网页', icon: FileCode, count: filterArtworks({ type: 'html' }).length }
+    { value: 'html', label: '网页', icon: FileCode, count: filterArtworks({ type: 'html' }).length },
+    { value: 'homepage', label: '个人主页', icon: UserRound, count: filterArtworks({ type: 'homepage' }).length }
   ] as const;
 
   return (

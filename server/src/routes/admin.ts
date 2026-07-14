@@ -57,7 +57,7 @@ router.get(
       let paramIndex = 1;
 
       // 按类型筛选
-      if (['image', 'video', 'html'].includes(typeValue)) {
+      if (['image', 'video', 'html', 'homepage'].includes(typeValue)) {
         query += ` AND type = $${paramIndex}`;
         params.push(typeValue);
         paramIndex++;
@@ -116,6 +116,7 @@ router.get(
           COUNT(artworks.id) FILTER (WHERE artworks.type = 'image')::int AS image_count,
           COUNT(artworks.id) FILTER (WHERE artworks.type = 'video')::int AS video_count,
           COUNT(artworks.id) FILTER (WHERE artworks.type = 'html')::int AS html_count,
+          COUNT(artworks.id) FILTER (WHERE artworks.type = 'homepage')::int AS homepage_count,
           MAX(artworks.created_at) AS last_submitted_at
         FROM users
         LEFT JOIN artworks ON artworks.student_id = users.id
@@ -133,6 +134,7 @@ router.get(
         imageCount: Number(student.image_count || 0),
         videoCount: Number(student.video_count || 0),
         htmlCount: Number(student.html_count || 0),
+        homepageCount: Number(student.homepage_count || 0),
         lastSubmittedAt: student.last_submitted_at
       }));
 
@@ -404,7 +406,8 @@ router.get(
       const typeStats = {
         image: 0,
         video: 0,
-        html: 0
+        html: 0,
+        homepage: 0
       };
 
       typeResult.rows.forEach(row => {

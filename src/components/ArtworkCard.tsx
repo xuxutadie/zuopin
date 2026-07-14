@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Artwork } from '../types';
-import { FileImage, FileVideo, FileCode, Calendar, Download, Trash2, Eye, X, Link2, ExternalLink, Globe2, QrCode } from 'lucide-react';
+import { FileImage, FileVideo, FileCode, UserRound, Calendar, Download, Trash2, Eye, X, Link2, ExternalLink, Globe2, QrCode } from 'lucide-react';
 import { formatFileSize } from '../utils/fileHelper';
 import { downloadSingleFile, previewHtmlWork } from '../utils/downloadHelper';
 
@@ -22,6 +22,8 @@ function getPlaceholderGradient(type: string): string {
   switch (type) {
     case 'html':
       return 'linear-gradient(135deg, #1e3a8a 0%, #6d28d9 50%, #312e81 100%)';
+    case 'homepage':
+      return 'linear-gradient(135deg, #164e63 0%, #0f766e 50%, #1e3a8a 100%)';
     case 'video':
       return 'linear-gradient(135deg, #14532d 0%, #15803d 50%, #064e3b 100%)';
     case 'image':
@@ -39,6 +41,9 @@ function getTypeIcon(type: string) {
     case 'video':
       return FileVideo;
     case 'html':
+      return FileCode;
+    case 'homepage':
+      return UserRound;
     default:
       return FileCode;
   }
@@ -52,6 +57,8 @@ function getTypeLabel(type: string): string {
       return '视频';
     case 'html':
       return 'HTML';
+    case 'homepage':
+      return '个人主页';
     default:
       return type;
   }
@@ -86,7 +93,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
   };
 
   const handlePreview = async () => {
-    if (artwork.type === 'html') {
+    if (artwork.type === 'html' || artwork.type === 'homepage') {
       await previewHtmlWork(artwork);
     } else {
       setShowPreview(true);
@@ -99,7 +106,8 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
     }
   };
 
-  const canShareHtml = artwork.type === 'html' && !!artwork.shareUrl;
+  const isStaticWebsite = artwork.type === 'html' || artwork.type === 'homepage';
+  const canShareHtml = isStaticWebsite && !!artwork.shareUrl;
 
   const handleCopyShareLink = async () => {
     if (!artwork.shareUrl) return;
@@ -116,8 +124,8 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
   // 是否展示缩略图图片
   const hasThumbnail = !!artwork.thumbnail && !imageError;
   const canTogglePublic = showPublicToggle && !!onTogglePublic;
-  const htmlPreviewUrl = artwork.type === 'html' ? artwork.shareUrl || artwork.fileData : '';
-  const canShowHtmlPreview = artwork.type === 'html' && !!htmlPreviewUrl && !htmlPreviewError;
+  const htmlPreviewUrl = isStaticWebsite ? artwork.shareUrl || artwork.fileData : '';
+  const canShowHtmlPreview = isStaticWebsite && !!htmlPreviewUrl && !htmlPreviewError;
   const qrCodeUrl = artwork.shareUrl
     ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(artwork.shareUrl)}`
     : '';
@@ -162,14 +170,16 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
                 className="absolute inset-0 h-full w-full border-0 bg-white pointer-events-none"
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 pb-3 pt-10">
-                <p className="text-center text-xs font-medium text-white/90">点击打开 HTML 作品</p>
+                <p className="text-center text-xs font-medium text-white/90">
+                  点击打开{artwork.type === 'homepage' ? '个人主页' : ' HTML 作品'}
+                </p>
               </div>
             </>
           )}
           {/* 渐变遮罩 + 图标 */}
           {!hasThumbnail && !canShowHtmlPreview && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-              {artwork.type === 'html' ? (
+              {isStaticWebsite ? (
                 <div className="w-4/5 max-w-[220px] overflow-hidden rounded-xl border border-white/20 bg-slate-950/80 shadow-2xl">
                   <div className="flex items-center gap-1 border-b border-white/10 bg-white/10 px-3 py-2">
                     <span className="h-2 w-2 rounded-full bg-red-400" />
@@ -187,7 +197,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
                     </div>
                   </div>
                   <div className="border-t border-white/10 px-3 py-2 text-center text-xs text-blue-100">
-                    点击预览 HTML 作品
+                    点击预览{artwork.type === 'homepage' ? '个人主页' : ' HTML 作品'}
                   </div>
                 </div>
               ) : (
@@ -384,7 +394,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
       </div>
 
       {/* 预览模态框 */}
-      {showPreview && artwork.type !== 'html' && (
+      {showPreview && !isStaticWebsite && (
         <div
           className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
           onClick={() => setShowPreview(false)}

@@ -1,33 +1,36 @@
-import { Artwork } from '../types';
+import { Artwork, ArtworkType } from '../types';
 
 // 文件类型映射
 const FILE_TYPE_MAP = {
   image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   video: ['video/mp4', 'video/webm'],
-  html: ['text/html', 'application/zip', 'application/x-zip-compressed']
+  html: ['text/html', 'application/zip', 'application/x-zip-compressed'],
+  homepage: ['application/zip', 'application/x-zip-compressed']
 };
 
 const FILE_EXTENSIONS = {
   image: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
   video: ['mp4', 'webm'],
-  html: ['html', 'htm', 'zip']
+  html: ['html', 'htm', 'zip'],
+  homepage: ['zip']
 };
 
 // 文件大小限制（字节）
 const FILE_SIZE_LIMITS = {
   image: 10 * 1024 * 1024, // 10MB
   video: 50 * 1024 * 1024, // 50MB
-  html: 20 * 1024 * 1024   // 20MB
+  html: 20 * 1024 * 1024,      // 20MB
+  homepage: 100 * 1024 * 1024 // 100MB
 };
 
 // 验证文件类型
-export function validateFileType(file: File, type: 'image' | 'video' | 'html'): boolean {
+export function validateFileType(file: File, type: ArtworkType): boolean {
   const extension = getFileExtension(file.name);
   return FILE_TYPE_MAP[type].includes(file.type) || FILE_EXTENSIONS[type].includes(extension);
 }
 
 // 验证文件大小
-export function validateFileSize(file: File, type: 'image' | 'video' | 'html'): boolean {
+export function validateFileSize(file: File, type: ArtworkType): boolean {
   return file.size <= FILE_SIZE_LIMITS[type];
 }
 
@@ -122,7 +125,7 @@ export function revokeObjectURL(url: string): void {
 
 // 创建HTML预览内容
 export function createHtmlPreview(artwork: Artwork): string {
-  if (artwork.type !== 'html') return '';
+  if (artwork.type !== 'html' && artwork.type !== 'homepage') return '';
   
   return `
     <!DOCTYPE html>

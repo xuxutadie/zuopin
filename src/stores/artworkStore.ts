@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Artwork, FilterOptions, StudentSummary } from '../types';
+import { Artwork, ArtworkType, FilterOptions, StudentSummary } from '../types';
 import { artworkApi, adminApi, ArtworkApiItem } from '../utils/api';
 import { User } from '../types';
 
@@ -26,7 +26,7 @@ interface ArtworkState {
     user: User,
     title: string,
     description: string,
-    type: 'image' | 'video' | 'html',
+    type: ArtworkType,
     file: File,
     options?: { thumbnail?: File | null; isPublic?: boolean }
   ) => Promise<{ success: boolean; error?: string; artwork?: Artwork }>;
@@ -56,7 +56,7 @@ interface ArtworkState {
   fetchStats: () => Promise<{
     totalWorks: number;
     totalStudents: number;
-    typeStats: { image: number; video: number; html: number };
+    typeStats: { image: number; video: number; html: number; homepage: number };
   }>;
 }
 
@@ -335,14 +335,14 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
       return {
         totalWorks: 0,
         totalStudents: 0,
-        typeStats: { image: 0, video: 0, html: 0 }
+        typeStats: { image: 0, video: 0, html: 0, homepage: 0 }
       };
     } catch (error) {
       console.error('获取统计数据失败:', error);
       return {
         totalWorks: 0,
         totalStudents: 0,
-        typeStats: { image: 0, video: 0, html: 0 }
+        typeStats: { image: 0, video: 0, html: 0, homepage: 0 }
       };
     }
   }
