@@ -11,6 +11,7 @@ import { MyWorks } from "./pages/MyWorks";
 import { TeacherDashboard } from "./pages/TeacherDashboard";
 import { WorksOverview } from "./pages/WorksOverview";
 import { Gallery } from "./pages/Gallery";
+import { WebsitePreview } from "./pages/WebsitePreview";
 
 function ProtectedRoute({
   children,
@@ -53,6 +54,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/preview/website" element={<WebsitePreview />} />
             <Route path="/login" element={<Login />} />
 
             <Route

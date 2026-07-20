@@ -77,18 +77,28 @@ export function createPreviewUrl(artwork: Artwork): string {
   return artwork.fileData;
 }
 
+export function createWebsitePreviewPageUrl(artwork: Artwork): string {
+  const targetUrl = artwork.shareUrl || artwork.fileData;
+  const params = new URLSearchParams({
+    url: targetUrl,
+    title: artwork.title
+  });
+
+  return `/preview/website?${params.toString()}`;
+}
+
 // 打开HTML作品预览
 export function previewHtmlWork(artwork: Artwork): void {
   if (artwork.type !== 'html' && artwork.type !== 'homepage') return;
 
   if (artwork.shareUrl) {
-    window.open(artwork.shareUrl, '_blank', 'noopener,noreferrer');
+    window.open(createWebsitePreviewPageUrl(artwork), '_blank', 'noopener,noreferrer');
     return;
   }
 
   const fileName = artwork.fileName.toLowerCase();
   if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
-    window.open(artwork.fileData, '_blank', 'noopener,noreferrer');
+    window.open(createWebsitePreviewPageUrl(artwork), '_blank', 'noopener,noreferrer');
     return;
   }
 
