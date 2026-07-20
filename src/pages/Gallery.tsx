@@ -44,6 +44,11 @@ export const Gallery: React.FC = () => {
     { value: 'homepage', label: '个人主页', icon: UserRound }
   ];
 
+  const getFilterCount = (type: FilterType) => {
+    if (type === 'all') return publicWorks.length;
+    return publicWorks.filter(work => work.type === type).length;
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -51,7 +56,7 @@ export const Gallery: React.FC = () => {
       {/* Hero 区域 */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 via-purple-900/30 to-slate-900/40 pointer-events-none" />
-        <div className="container mx-auto px-4 py-12 relative">
+        <div className="container mx-auto px-4 py-8 relative">
           <div className="text-center">
             <div className="inline-flex items-center space-x-2 rounded-full border border-white/15 bg-black/40 px-4 py-2 text-sm font-medium text-blue-100 shadow-sm backdrop-blur mb-4">
               <Sparkles className="w-4 h-4" />
@@ -63,109 +68,75 @@ export const Gallery: React.FC = () => {
                 创意作品
               </span>
             </h1>
-            <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-6">
+            <p className="text-lg text-slate-300 max-w-2xl mx-auto">
               这里汇集了同学们提交的优秀作品，包括 AI 绘图、视频、网页互动作品等。点击卡片即可预览或下载欣赏。
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                onClick={() => navigate('/login')}
-                className="px-6 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-500 transition-colors shadow-lg shadow-blue-900/50"
-              >
-                提交我的作品
-              </button>
-              <button
-                onClick={() => {
-                  void fetchPublicWorks();
-                }}
-                className="px-6 py-2.5 rounded-lg border border-slate-700 bg-slate-900/60 text-slate-200 font-medium hover:bg-slate-800 transition-colors flex items-center space-x-2"
-              >
-                <RefreshCw className={clsx('w-4 h-4', isLoading && 'animate-spin')} />
-                <span>刷新作品</span>
-              </button>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* 统计信息 */}
-      <section className="px-4 pb-2">
+      {/* 搜索、筛选和操作 */}
+      <section className="px-4 pb-6">
         <div className="container mx-auto">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-            {filterOptions.map((opt) => {
-              const Icon = opt.icon;
-              const count = opt.value === 'all'
-                ? publicWorks.length
-                : publicWorks.filter(w => w.type === opt.value).length;
-              return (
-                <div
-                  key={opt.value}
-                  className={clsx(
-                    'p-4 rounded-xl border transition-all',
-                    filterType === opt.value
-                      ? 'border-blue-500 bg-blue-500/10'
-                      : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
-                  )}
+          <div className="mb-6 rounded-xl border border-slate-800 bg-slate-950/70 p-3 shadow-lg shadow-black/20 backdrop-blur">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center xl:flex-1">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-950/50 transition-colors hover:bg-blue-500"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Icon className={clsx(
-                        'w-5 h-5',
-                        filterType === opt.value ? 'text-blue-400' : 'text-slate-400'
-                      )} />
-                      <span className={clsx(
-                        'text-sm font-medium',
-                        filterType === opt.value ? 'text-blue-200' : 'text-slate-300'
-                      )}>
-                        {opt.label}
-                      </span>
-                    </div>
-                    <span className={clsx(
-                      'text-lg font-bold',
-                      filterType === opt.value ? 'text-blue-300' : 'text-slate-400'
-                    )}>
-                      {count}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+                  提交作品
+                </button>
+                <button
+                  onClick={() => {
+                    void fetchPublicWorks();
+                  }}
+                  className="inline-flex items-center justify-center space-x-2 rounded-lg border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-800"
+                >
+                  <RefreshCw className={clsx('w-4 h-4', isLoading && 'animate-spin')} />
+                  <span>刷新</span>
+                </button>
+              </div>
 
-      {/* 筛选和搜索 */}
-      <section className="px-4 py-6">
-        <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row gap-4 mb-8">
-            {/* 搜索框 */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="搜索作品标题、作者或描述..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900/80 text-slate-200 placeholder-slate-500 focus:border-blue-500 focus:outline-none transition-colors"
-              />
+              <div className="relative w-full xl:max-w-md">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="搜索作品标题、作者或描述..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-lg border border-slate-800 bg-slate-900/90 py-2.5 pl-9 pr-4 text-sm text-slate-200 placeholder-slate-500 transition-colors focus:border-blue-500 focus:outline-none"
+                />
+              </div>
             </div>
 
             {/* 类型筛选 */}
-            <div className="flex items-center space-x-2 overflow-x-auto">
+            <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
               {filterOptions.map((opt) => {
                 const Icon = opt.icon;
+                const count = getFilterCount(opt.value);
                 return (
                   <button
                     key={opt.value}
                     onClick={() => setFilterType(opt.value)}
+                    aria-pressed={filterType === opt.value}
                     className={clsx(
-                      'flex items-center space-x-1.5 px-4 py-2.5 rounded-xl border text-sm font-medium whitespace-nowrap transition-all',
+                      'inline-flex min-w-max items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all',
                       filterType === opt.value
-                        ? 'border-blue-500 bg-blue-500/20 text-blue-200'
-                        : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                        ? 'border-blue-500 bg-blue-500/15 text-blue-100'
+                        : 'border-slate-800 bg-slate-900/70 text-slate-400 hover:border-slate-700 hover:text-slate-200'
                     )}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{opt.label}</span>
+                    <span className={clsx(
+                      'rounded-full px-2 py-0.5 text-xs',
+                      filterType === opt.value
+                        ? 'bg-blue-400/20 text-blue-100'
+                        : 'bg-slate-800 text-slate-300'
+                    )}>
+                      {count}
+                    </span>
                   </button>
                 );
               })}

@@ -65,7 +65,7 @@ export async function initializeDatabase(): Promise<void> {
         student_name VARCHAR(100) NOT NULL,
         title VARCHAR(200) NOT NULL,
         description TEXT,
-        type VARCHAR(20) NOT NULL CHECK (type IN ('image', 'video', 'html')),
+        type VARCHAR(20) NOT NULL CHECK (type IN ('image', 'video', 'html', 'homepage')),
         file_name VARCHAR(255) NOT NULL,
         file_path VARCHAR(500) NOT NULL,
         file_size BIGINT NOT NULL,
@@ -85,6 +85,18 @@ export async function initializeDatabase(): Promise<void> {
       ADD COLUMN IF NOT EXISTS html_entry_path VARCHAR(500)
     `);
     console.log('✅ 作品表字段检查完成');
+
+    // 兼容旧数据库：早期版本的作品类型约束不包含个人主页，需要在启动时升级。
+    await client.query(`
+      ALTER TABLE artworks
+      DROP CONSTRAINT IF EXISTS artworks_type_check
+    `);
+    await client.query(`
+      ALTER TABLE artworks
+      ADD CONSTRAINT artworks_type_check
+      CHECK (type IN ('image', 'video', 'html', 'homepage'))
+    `);
+    console.log('✅ 作品类型约束检查完成');
 
     // 创建老师账号
     const teacherName = '30761985';
